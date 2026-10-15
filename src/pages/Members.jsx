@@ -11,6 +11,7 @@ import Pagination from '../components/Pagination';
 import { Plus, Search, Info, PlusCircle, History, Edit, X, Save, Calendar, Download, FileText, Receipt, Trash2, AlertTriangle, Upload, Camera, Eye, Image as ImageIcon } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { membersService } from '../utils/supabaseService';
+import { optimizeImageToTargetSize } from '../utils/imageOptimizer';
 
 export default function Members() {
   const { user } = useAuth();
@@ -38,6 +39,19 @@ export default function Members() {
   const [nidBackFile, setNidBackFile] = useState(null);
   const [nidBackPreview, setNidBackPreview] = useState('');
   const [previewImage, setPreviewImage] = useState(null); // { url, title }
+
+  // Compress & optimize image file to ~100KB on selection
+  const handleImageFileChange = async (file, setFile, setPreview) => {
+    if (!file) return;
+    try {
+      const optimized = await optimizeImageToTargetSize(file, 100);
+      setFile(optimized);
+      setPreview(URL.createObjectURL(optimized));
+    } catch (e) {
+      setFile(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
 
   // Delete confirmation modal state
   const [deleteModal, setDeleteModal] = useState(null); // { type: 'member'|'deposit', target, label }
@@ -1022,13 +1036,7 @@ export default function Members() {
                         accept="image/*"
                         id="add-member-photo"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setPhotoFile(file);
-                            setPhotoPreview(URL.createObjectURL(file));
-                          }
-                        }}
+                        onChange={(e) => handleImageFileChange(e.target.files?.[0], setPhotoFile, setPhotoPreview)}
                       />
                       <label
                         htmlFor="add-member-photo"
@@ -1038,7 +1046,7 @@ export default function Members() {
                         <Upload size={14} />
                         <span>{photoPreview ? 'ছবি পরিবর্তন করুন' : 'ছবি আপলোড করুন'}</span>
                       </label>
-                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>PNG, JPG সর্বোচ্চ ৫MB</p>
+                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>PNG, JPG (স্বয়ংক্রিয়ভাবে ১০০KB অপ্টিমাইজড হবে)</p>
                     </div>
                   </div>
                 </div>
@@ -1082,13 +1090,7 @@ export default function Members() {
                         accept="image/*"
                         id="add-nid-front"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setNidFrontFile(file);
-                            setNidFrontPreview(URL.createObjectURL(file));
-                          }
-                        }}
+                        onChange={(e) => handleImageFileChange(e.target.files?.[0], setNidFrontFile, setNidFrontPreview)}
                       />
                     </div>
                     {nidFrontPreview && (
@@ -1135,13 +1137,7 @@ export default function Members() {
                         accept="image/*"
                         id="add-nid-back"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setNidBackFile(file);
-                            setNidBackPreview(URL.createObjectURL(file));
-                          }
-                        }}
+                        onChange={(e) => handleImageFileChange(e.target.files?.[0], setNidBackFile, setNidBackPreview)}
                       />
                     </div>
                     {nidBackPreview && (
@@ -1297,13 +1293,7 @@ export default function Members() {
                         accept="image/*"
                         id="edit-member-photo"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setPhotoFile(file);
-                            setPhotoPreview(URL.createObjectURL(file));
-                          }
-                        }}
+                        onChange={(e) => handleImageFileChange(e.target.files?.[0], setPhotoFile, setPhotoPreview)}
                       />
                       <label
                         htmlFor="edit-member-photo"
@@ -1313,7 +1303,7 @@ export default function Members() {
                         <Upload size={14} />
                         <span>{photoPreview ? 'ছবি পরিবর্তন করুন' : 'ছবি আপলোড করুন'}</span>
                       </label>
-                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>PNG, JPG সর্বোচ্চ ৫MB</p>
+                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>PNG, JPG (স্বয়ংক্রিয়ভাবে ১০০KB অপ্টিমাইজড হবে)</p>
                     </div>
                   </div>
                 </div>
@@ -1357,13 +1347,7 @@ export default function Members() {
                         accept="image/*"
                         id="edit-nid-front"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setNidFrontFile(file);
-                            setNidFrontPreview(URL.createObjectURL(file));
-                          }
-                        }}
+                        onChange={(e) => handleImageFileChange(e.target.files?.[0], setNidFrontFile, setNidFrontPreview)}
                       />
                     </div>
                     {nidFrontPreview && (
@@ -1410,13 +1394,7 @@ export default function Members() {
                         accept="image/*"
                         id="edit-nid-back"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setNidBackFile(file);
-                            setNidBackPreview(URL.createObjectURL(file));
-                          }
-                        }}
+                        onChange={(e) => handleImageFileChange(e.target.files?.[0], setNidBackFile, setNidBackPreview)}
                       />
                     </div>
                     {nidBackPreview && (

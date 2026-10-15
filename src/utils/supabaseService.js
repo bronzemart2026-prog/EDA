@@ -7,6 +7,7 @@ import {
   calculateProjectMonthsElapsed,
   generateProjectMonthsList
 } from './investmentCalculations';
+import { optimizeImageToTargetSize } from './imageOptimizer';
 
 // --- HELPER MAPPERS (Snake <-> Camel & ID mapping) ---
 
@@ -345,14 +346,23 @@ export const membersService = {
 
   async uploadDocument(file, type = 'photo') {
     if (!file) return null;
-    const fileExt = file.name.split('.').pop() || 'jpg';
+
+    // Automatically optimize/compress image to ~100KB with crisp clarity before upload
+    let fileToUpload = file;
+    try {
+      fileToUpload = await optimizeImageToTargetSize(file, 100, 1200);
+    } catch (optErr) {
+      console.warn('Image optimization warning, proceeding with original file:', optErr);
+    }
+
+    const fileExt = fileToUpload.name.split('.').pop() || 'jpg';
     const cleanType = type.replace(/[^a-zA-Z0-9_-]/g, '');
     const fileName = `${Date.now()}_${cleanType}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
     const filePath = `${cleanType}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('member-documents')
-      .upload(filePath, file, {
+      .upload(filePath, fileToUpload, {
         cacheControl: '3600',
         upsert: true
       });
