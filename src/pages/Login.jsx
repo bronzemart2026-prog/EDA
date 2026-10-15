@@ -51,18 +51,18 @@ export default function Login() {
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <img
             src="/main_logo.png"
-            alt="Logo"
+            alt="EDA Logo"
             className="login-logo"
             style={{
-              width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover',
+              width: '96px', height: '96px', borderRadius: '22px', objectFit: 'contain',
               border: '3px solid rgba(255,255,255,0.25)',
               backgroundColor: '#fff',
-              padding: '2px',
+              padding: '4px',
               display: 'inline-block'
             }}
           />
           <h1 className="login-somiti-title">
-            স্বপ্নের বাতিঘর 
+            Entrepreneur Development Association
           </h1>
         </div>
 
@@ -191,7 +191,7 @@ export default function Login() {
         {/* Footer */}
         <div className="login-footer" style={{ marginTop: '28px', textAlign: 'center', fontSize: '0.85rem' }}>
           <div style={{ color: 'rgba(255,255,255,0.75)', marginBottom: '8px' }}>
-            © {new Date().getFullYear()} স্বপ্নের বাতিঘর 
+            © {new Date().getFullYear()} Entrepreneur Development Association (EDA)
           </div>
           <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
             Developed by: <span style={{ fontWeight: 'bold', color: 'rgba(255,255,255,0.88)' }}>Md Arif Uddin</span> |{' '}
