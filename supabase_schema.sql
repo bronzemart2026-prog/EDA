@@ -1,18 +1,19 @@
 -- =========================================================================
 -- EDA (Entrepreneur Development Association) - Complete Supabase Setup
--- Includes: Tables, Schema, Security Policies (RLS), Storage, Helper Functions
--- and Admin Account Seed (Mobile: 01825334505 / Password: 01906872)
+-- Includes: Tables, Schema, Security Policies (RLS), Permissions (GRANTs),
+-- Helper Triggers, and Clean Admin Account Seed
+-- Phone / Username: 01825334505 | Password: 01906872
 -- =========================================================================
 
--- 1. Enable required extensions
+-- 1. Enable Required Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- =========================================================================
--- 2. CREATE TABLES
+-- 2. CREATE APPLICATION TABLES
 -- =========================================================================
 
--- PROFILES (Users & Admins)
+-- Profiles (Admins & Users)
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -25,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- MEMBERS (Samity Members)
+-- Members
 CREATE TABLE IF NOT EXISTS public.members (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     member_id TEXT UNIQUE NOT NULL,
@@ -47,7 +48,7 @@ CREATE TABLE IF NOT EXISTS public.members (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- PROJECTS (Investments / Auto-Rickshaw / Business Projects)
+-- Projects (Investments)
 CREATE TABLE IF NOT EXISTS public.projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_name TEXT NOT NULL,
@@ -69,7 +70,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- DEPOSITS (Monthly Savings Collections)
+-- Deposits (Savings)
 CREATE TABLE IF NOT EXISTS public.deposits (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     member_id UUID NOT NULL REFERENCES public.members(id) ON DELETE CASCADE,
@@ -80,7 +81,7 @@ CREATE TABLE IF NOT EXISTS public.deposits (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- INSTALLMENTS (Project Collections)
+-- Installments (Project Collections)
 CREATE TABLE IF NOT EXISTS public.installments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
@@ -91,7 +92,7 @@ CREATE TABLE IF NOT EXISTS public.installments (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- EXPENSES (Operational Expenses)
+-- Expenses
 CREATE TABLE IF NOT EXISTS public.expenses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
@@ -104,7 +105,19 @@ CREATE TABLE IF NOT EXISTS public.expenses (
 );
 
 -- =========================================================================
--- 3. ROW LEVEL SECURITY (RLS) POLICIES
+-- 3. SCHEMA PRIVILEGES & GRANTS (Fixes 401 Permission Denied)
+-- =========================================================================
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authenticated, service_role;
+
+-- =========================================================================
+-- 4. ROW LEVEL SECURITY (RLS) POLICIES
 -- =========================================================================
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -114,9 +127,11 @@ ALTER TABLE public.deposits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.installments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 
--- Allow full access to authenticated users
 DROP POLICY IF EXISTS "Allow all for authenticated users" ON public.profiles;
 CREATE POLICY "Allow all for authenticated users" ON public.profiles FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow read for anon" ON public.profiles;
+CREATE POLICY "Allow read for anon" ON public.profiles FOR SELECT TO anon USING (true);
 
 DROP POLICY IF EXISTS "Allow all for authenticated users" ON public.members;
 CREATE POLICY "Allow all for authenticated users" ON public.members FOR ALL TO authenticated USING (true) WITH CHECK (true);
@@ -133,12 +148,8 @@ CREATE POLICY "Allow all for authenticated users" ON public.installments FOR ALL
 DROP POLICY IF EXISTS "Allow all for authenticated users" ON public.expenses;
 CREATE POLICY "Allow all for authenticated users" ON public.expenses FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
--- Allow public read on profiles for initial login lookup
-DROP POLICY IF EXISTS "Allow read for anon" ON public.profiles;
-CREATE POLICY "Allow read for anon" ON public.profiles FOR SELECT TO anon USING (true);
-
 -- =========================================================================
--- 4. STORAGE BUCKET FOR DOCUMENTS & PHOTOS
+-- 5. STORAGE BUCKET FOR DOCUMENTS & PHOTOS
 -- =========================================================================
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('member-documents', 'member-documents', true)
@@ -149,10 +160,10 @@ CREATE POLICY "Allow public uploads in member-documents" ON storage.objects
 FOR ALL TO authenticated, anon USING (bucket_id = 'member-documents') WITH CHECK (bucket_id = 'member-documents');
 
 -- =========================================================================
--- 5. RPC HELPER FUNCTIONS (Login resolution & Admin operations)
+-- 6. RPC HELPER FUNCTIONS
 -- =========================================================================
 
--- Resolve login email by mobile number or username
+-- Resolve login email by mobile number, username, or email
 CREATE OR REPLACE FUNCTION public.get_login_email(p_identifier TEXT)
 RETURNS TEXT
 LANGUAGE plpgsql
@@ -163,156 +174,174 @@ DECLARE
 BEGIN
     SELECT u.email INTO v_email
     FROM auth.users u
-    JOIN public.profiles p ON p.id = u.id
+    LEFT JOIN public.profiles p ON p.id = u.id
     WHERE LOWER(p.username) = LOWER(TRIM(p_identifier))
        OR p.mobile = TRIM(p_identifier)
        OR LOWER(u.email) = LOWER(TRIM(p_identifier))
     LIMIT 1;
 
+    -- Fallback to default format if not found in profiles
+    IF v_email IS NULL THEN
+        v_email := LOWER(TRIM(p_identifier)) || '@somiti.com';
+    END IF;
+
     RETURN v_email;
 END;
 $$;
 
--- Admin Create User RPC
-CREATE OR REPLACE FUNCTION public.admin_create_user(
-    p_name TEXT,
-    p_mobile TEXT,
-    p_username TEXT,
-    p_password TEXT,
-    p_role TEXT DEFAULT 'member',
-    p_status TEXT DEFAULT 'active',
-    p_member_id UUID DEFAULT NULL
-)
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+-- Auto-confirm emails trigger
+CREATE OR REPLACE FUNCTION public.auto_confirm_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.email_confirmed_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_auto_confirm ON auth.users;
+CREATE TRIGGER on_auth_user_created_auto_confirm
+BEFORE INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION public.auto_confirm_user();
+
+-- Automatically sync created auth users to public.profiles
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.profiles (id, name, mobile, username, role, status)
+    VALUES (
+        NEW.id,
+        COALESCE(NEW.raw_user_meta_data->>'name', 'Md Arif Uddin'),
+        COALESCE(NEW.raw_user_meta_data->>'mobile', SPLIT_PART(NEW.email, '@', 1)),
+        COALESCE(NEW.raw_user_meta_data->>'username', SPLIT_PART(NEW.email, '@', 1)),
+        COALESCE(NEW.raw_user_meta_data->>'role', 'admin'),
+        'active'
+    )
+    ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        role = EXCLUDED.role,
+        status = 'active';
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- =========================================================================
+-- 7. CLEAN & SEED ADMIN ACCOUNT
+-- Mobile:   01825334505
+-- Password: 01906872
+-- =========================================================================
+
+-- First remove any broken/incomplete entry for this user
+DELETE FROM auth.users WHERE email = '01825334505@somiti.com';
+
+DO $$
 DECLARE
     v_user_id UUID := gen_random_uuid();
-    v_email TEXT := LOWER(TRIM(p_username)) || '@somiti.com';
+    v_identity_id UUID := gen_random_uuid();
+    v_phone TEXT := '01825334505';
+    v_email TEXT := '01825334505@somiti.com';
+    v_pass TEXT := '01906872';
+    v_name TEXT := 'Md Arif Uddin';
 BEGIN
     INSERT INTO auth.users (
-        id, instance_id, aud, role, email, encrypted_password,
-        email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-        created_at, updated_at
-    )
-    VALUES (
-        v_user_id,
+        instance_id,
+        id,
+        aud,
+        role,
+        email,
+        encrypted_password,
+        email_confirmed_at,
+        recovery_sent_at,
+        last_sign_in_at,
+        raw_app_meta_data,
+        raw_user_meta_data,
+        created_at,
+        updated_at,
+        confirmation_token,
+        email_change,
+        email_change_token_new,
+        recovery_token,
+        is_super_admin,
+        phone,
+        phone_confirmed_at,
+        phone_change,
+        phone_change_token,
+        email_change_token_current,
+        email_change_confirm_status,
+        banned_until,
+        reauthentication_token,
+        reauthentication_sent_at,
+        is_sso_user,
+        deleted_at,
+        is_anonymous
+    ) VALUES (
         '00000000-0000-0000-0000-000000000000',
+        v_user_id,
         'authenticated',
         'authenticated',
         v_email,
-        crypt(p_password, gen_salt('bf')),
+        crypt(v_pass, gen_salt('bf')),
         now(),
-        '{"provider":"email","providers":["email"]}'::jsonb,
-        jsonb_build_object('name', p_name, 'role', p_role),
+        NULL,
         now(),
-        now()
+        '{"provider": "email", "providers": ["email"]}'::jsonb,
+        jsonb_build_object('name', v_name, 'role', 'admin', 'sub', v_user_id::text, 'email', v_email, 'mobile', v_phone, 'username', v_phone),
+        now(),
+        now(),
+        '',
+        '',
+        '',
+        '',
+        FALSE,
+        '',
+        NULL,
+        '',
+        '',
+        '',
+        0,
+        NULL,
+        '',
+        NULL,
+        FALSE,
+        NULL,
+        FALSE
     );
 
     INSERT INTO auth.identities (
-        id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
-    )
-    VALUES (
-        v_user_id,
-        v_user_id,
-        jsonb_build_object('sub', v_user_id::text, 'email', v_email),
-        'email',
+        identity_id,
+        id,
+        user_id,
+        identity_data,
+        provider,
+        last_sign_in_at,
+        created_at,
+        updated_at
+    ) VALUES (
+        v_identity_id,
         v_user_id::text,
+        v_user_id,
+        jsonb_build_object('sub', v_user_id::text, 'email', v_email, 'email_verified', true),
+        'email',
         now(),
         now(),
         now()
     );
 
     INSERT INTO public.profiles (
-        id, name, mobile, username, role, status, member_id
+        id, name, mobile, username, role, status
+    ) VALUES (
+        v_user_id, v_name, v_phone, v_phone, 'admin', 'active'
     )
-    VALUES (
-        v_user_id, p_name, p_mobile, LOWER(TRIM(p_username)), p_role, p_status, p_member_id
-    );
+    ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        mobile = EXCLUDED.mobile,
+        username = EXCLUDED.username,
+        role = 'admin',
+        status = 'active';
 
-    RETURN jsonb_build_object('id', v_user_id, 'username', p_username, 'mobile', p_mobile);
-END;
-$$;
-
--- =========================================================================
--- 6. SEED ADMIN ACCOUNT
--- Phone / Username: 01825334505
--- Password:         01906872
--- Role:             admin
--- Status:           active
--- =========================================================================
-
-DO $$
-DECLARE
-    v_user_id UUID;
-    v_phone TEXT := '01825334505';
-    v_email TEXT := '01825334505@somiti.com';
-    v_pass TEXT := '01906872';
-    v_name TEXT := 'Md Arif Uddin';
-BEGIN
-    -- Check if user already exists in auth.users by email
-    SELECT id INTO v_user_id FROM auth.users WHERE email = v_email LIMIT 1;
-
-    IF v_user_id IS NOT NULL THEN
-        -- User exists: update password to 01906872 and confirm email
-        UPDATE auth.users
-        SET encrypted_password = crypt(v_pass, gen_salt('bf')),
-            email_confirmed_at = now(),
-            updated_at = now()
-        WHERE id = v_user_id;
-
-        -- Ensure profile is admin and active
-        INSERT INTO public.profiles (id, name, mobile, username, role, status)
-        VALUES (v_user_id, v_name, v_phone, v_phone, 'admin', 'active')
-        ON CONFLICT (id) DO UPDATE SET
-            name = EXCLUDED.name,
-            mobile = EXCLUDED.mobile,
-            username = EXCLUDED.username,
-            role = 'admin',
-            status = 'active';
-
-        RAISE NOTICE 'Admin user (%) password updated successfully.', v_phone;
-    ELSE
-        -- User does not exist: create fresh
-        v_user_id := gen_random_uuid();
-
-        INSERT INTO auth.users (
-            id, instance_id, aud, role, email, encrypted_password,
-            email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-            created_at, updated_at
-        )
-        VALUES (
-            v_user_id,
-            '00000000-0000-0000-0000-000000000000',
-            'authenticated',
-            'authenticated',
-            v_email,
-            crypt(v_pass, gen_salt('bf')),
-            now(),
-            '{"provider":"email","providers":["email"]}'::jsonb,
-            jsonb_build_object('name', v_name, 'role', 'admin'),
-            now(),
-            now()
-        );
-
-        INSERT INTO auth.identities (
-            id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
-        )
-        VALUES (
-            v_user_id,
-            v_user_id,
-            jsonb_build_object('sub', v_user_id::text, 'email', v_email),
-            'email',
-            v_user_id::text,
-            now(),
-            now(),
-            now()
-        );
-
-        INSERT INTO public.profiles (id, name, mobile, username, role, status)
-        VALUES (v_user_id, v_name, v_phone, v_phone, 'admin', 'active');
-
-        RAISE NOTICE 'Admin user (%) created successfully with ID: %', v_phone, v_user_id;
-    END IF;
+    RAISE NOTICE 'Admin user created successfully with ID: %', v_user_id;
 END $$;
