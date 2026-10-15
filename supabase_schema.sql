@@ -241,7 +241,6 @@ DELETE FROM auth.users WHERE email = '01825334505@somiti.com';
 DO $$
 DECLARE
     v_user_id UUID := gen_random_uuid();
-    v_identity_id UUID := gen_random_uuid();
     v_phone TEXT := '01825334505';
     v_email TEXT := '01825334505@somiti.com';
     v_pass TEXT := '01906872';
@@ -312,20 +311,20 @@ BEGIN
     );
 
     INSERT INTO auth.identities (
-        identity_id,
         id,
         user_id,
         identity_data,
         provider,
+        provider_id,
         last_sign_in_at,
         created_at,
         updated_at
     ) VALUES (
-        v_identity_id,
         v_user_id::text,
         v_user_id,
         jsonb_build_object('sub', v_user_id::text, 'email', v_email, 'email_verified', true),
         'email',
+        v_user_id::text,
         now(),
         now(),
         now()
