@@ -40,7 +40,7 @@ export default function ReceiptModal({ receipt, onClose }) {
 
   // Format the WhatsApp message text
   const buildWhatsAppText = () => {
-    const orgName = 'স্বপ্নের বাতিঘর ';
+    const orgName = 'Entrepreneur Development Association (EDA)';
     const lines = [
       `🏦 *${orgName}*`,
       `━━━━━━━━━━━━━━━━━━━━`,
@@ -158,7 +158,7 @@ export default function ReceiptModal({ receipt, onClose }) {
 
           {/* Receipt Header Gradient */}
           <div style={{
-            background: 'linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%)',
+            background: 'linear-gradient(135deg, #064e3b 0%, #047857 55%, #0284c7 100%)',
             padding: '14px 16px 10px',
             textAlign: 'center',
             position: 'relative',
@@ -184,10 +184,11 @@ export default function ReceiptModal({ receipt, onClose }) {
                 src="/main_logo.png"
                 alt="Logo"
                 style={{
-                  width: '46px', height: '46px', borderRadius: '50%',
-                  objectFit: 'cover', border: '2px solid rgba(255,255,255,0.5)',
+                  width: '46px', height: '46px', borderRadius: '12px',
+                  objectFit: 'contain', border: '2px solid rgba(255,255,255,0.5)',
                   boxShadow: '0 3px 8px rgba(0,0,0,0.2)',
                   backgroundColor: '#fff',
+                  padding: '2px',
                 }}
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
@@ -197,9 +198,9 @@ export default function ReceiptModal({ receipt, onClose }) {
               color: '#ffffff', fontSize: '1.05rem', fontWeight: 800,
               marginBottom: '2px', textShadow: '0 1px 3px rgba(0,0,0,0.2)',
             }}>
-              স্বপ্নের বাতিঘর
+              Entrepreneur Development Association (EDA)
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: '0.68rem', letterSpacing: '0.3px' }}>
+            <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: '0.68rem', letterSpacing: '0.3px' }}>
               সঞ্চয় ও বিনিয়োগ ব্যবস্থাপনা সমিতি
             </p>
 

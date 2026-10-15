@@ -70,7 +70,7 @@ export default function Home() {
       <main className="content-wrapper">
         <div className="card" style={{
           marginBottom: '20px',
-          background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)',
+          background: 'linear-gradient(135deg, #064e3b 0%, #047857 55%, #0284c7 100%)',
           color: 'white',
           border: 'none',
           display: 'flex',
@@ -82,11 +82,11 @@ export default function Home() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <img src="/main_logo.png" alt="Logo" style={{
-              width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover',
-              border: '2px solid rgba(255,255,255,0.3)',
+              width: '60px', height: '60px', borderRadius: '16px', objectFit: 'contain',
+              border: '2px solid rgba(255,255,255,0.35)',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
               backgroundColor: '#fff',
-              padding: '2px'
+              padding: '3px'
             }} />
             <div>
               <h3 style={{ fontSize: '1.2rem', marginBottom: '4px', color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>
@@ -115,7 +115,7 @@ export default function Home() {
             {/* Current Balance Highlight Card */}
             <div className="card" style={{
               marginBottom: '16px',
-              background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)',
+              background: 'linear-gradient(135deg, #064e3b 0%, #047857 100%)',
               color: 'white',
               border: 'none',
               borderRadius: 'var(--radius-lg)',
@@ -139,7 +139,7 @@ export default function Home() {
             {/* Project Profit Highlight Card */}
             <div className="card" style={{
               marginBottom: '16px',
-              background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
               color: 'white',
               border: 'none',
               borderRadius: 'var(--radius-lg)',

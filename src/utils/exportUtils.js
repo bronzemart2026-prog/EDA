@@ -135,16 +135,16 @@ export function exportToPDF(data, columns, title = 'রিপোর্ট', file
     <div style="font-family:'Hind Siliguri',-apple-system,BlinkMacSystemFont,sans-serif;padding:20px 24px;color:#1e293b;background:#fff;">
 
       <!-- Premium Designed Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:3px double #1d4ed8;padding-bottom:16px;page-break-inside:avoid;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:3px double #047857;padding-bottom:16px;page-break-inside:avoid;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <img src="${window.location.origin}/main_logo.png" style="width:46px;height:46px;border-radius:12px;box-shadow:0 3px 6px rgba(0,0,0,0.15);object-fit:cover;" />
+          <img src="${window.location.origin}/main_logo.png" style="width:48px;height:48px;border-radius:12px;box-shadow:0 3px 6px rgba(0,0,0,0.15);object-fit:contain;background:#fff;padding:2px;" />
           <div>
-            <h1 style="font-size:22px;color:#1e3a8a;font-weight:800;margin:0;letter-spacing:0.5px;">স্বপ্নের বাতিঘর </h1>
-            <p style="font-size:9px;color:#64748b;margin:2px 0 0 0;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;">SOPNER BATHIGHOR</p>
+            <h1 style="font-size:20px;color:#064e3b;font-weight:800;margin:0;letter-spacing:0.5px;">Entrepreneur Development Association (EDA)</h1>
+            <p style="font-size:9px;color:#047857;margin:2px 0 0 0;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;">ENTREPRENEUR DEVELOPMENT ASSOCIATION</p>
           </div>
         </div>
         <div>
-          <span style="font-size:12px;color:#fff;font-weight:700;background:#1d4ed8;padding:6px 16px;border-radius:30px;box-shadow:0 2px 4px rgba(29,78,216,0.15);letter-spacing:0.5px;display:inline-block;white-space:nowrap;">
+          <span style="font-size:12px;color:#fff;font-weight:700;background:linear-gradient(135deg, #064e3b 0%, #047857 50%, #0284c7 100%);padding:6px 16px;border-radius:30px;box-shadow:0 2px 6px rgba(4,120,87,0.2);letter-spacing:0.5px;display:inline-block;white-space:nowrap;">
             ${title}
           </span>
         </div>
@@ -161,7 +161,7 @@ export function exportToPDF(data, columns, title = 'রিপোর্ট', file
       <table style="width:100%;border-collapse:collapse;font-size:${isLandscape ? '9px' : '11px'};table-layout:fixed;">
         <thead>
           <tr>
-            ${columns.map(c => `<th style="background:#1d4ed8;color:#fff;font-weight:700;padding:9px 8px;border:1px solid #1d4ed8;text-align:left;word-wrap:break-word;">${c.header}</th>`).join('')}
+            ${columns.map(c => `<th style="background:#047857;color:#fff;font-weight:700;padding:9px 8px;border:1px solid #047857;text-align:left;word-wrap:break-word;">${c.header}</th>`).join('')}
           </tr>
         </thead>
         <tbody>
@@ -174,7 +174,7 @@ export function exportToPDF(data, columns, title = 'রিপোর্ট', file
             </tr>`).join('')}
         </tbody>
         <tfoot>
-          <tr style="background:#f8fafc;border-top:2.5px solid #1d4ed8;border-bottom:2px solid #1d4ed8;page-break-inside:avoid;">
+          <tr style="background:#f8fafc;border-top:2.5px solid #047857;border-bottom:2px solid #047857;page-break-inside:avoid;">
             ${tfootCells}
           </tr>
         </tfoot>
@@ -185,10 +185,10 @@ export function exportToPDF(data, columns, title = 'রিপোর্ট', file
 
       <!-- Beautiful Styled Footer -->
       <div style="margin-top:40px;text-align:center;font-size:10px;color:#475569;border-top:1px solid #cbd5e1;padding-top:12px;page-break-inside:avoid;line-height:1.6;">
-        <div style="font-weight:700;">© ${new Date().getFullYear()} স্বপ্নের বাতিঘর  | সর্বস্বত্ব সংরক্ষিত।</div>
+        <div style="font-weight:700;">© ${new Date().getFullYear()} Entrepreneur Development Association (EDA) | সর্বস্বত্ব সংরক্ষিত।</div>
         <div style="font-size:9px;color:#64748b;margin-top:2px;">
-          Developed by: <span style="font-weight:bold;color:#1d4ed8;">Md Arif Uddin</span> | 
-          <a href="https://wa.me/8801825334505" target="_blank" rel="noopener noreferrer" style="color:#1d4ed8;text-decoration:none;font-weight:700;margin-left:2px;">01825334505 (WhatsApp)</a>
+          Developed by: <span style="font-weight:bold;color:#047857;">Md Arif Uddin</span> | 
+          <a href="https://wa.me/8801825334505" target="_blank" rel="noopener noreferrer" style="color:#047857;text-decoration:none;font-weight:700;margin-left:2px;">01825334505 (WhatsApp)</a>
         </div>
       </div>
     </div>
