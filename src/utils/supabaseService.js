@@ -27,6 +27,10 @@ export const mapMemberFromDb = (m) => {
     photoUrl: m.photo_url || m.photoUrl || '',
     nidFrontUrl: m.nid_front_url || m.nidFrontUrl || '',
     nidBackUrl: m.nid_back_url || m.nidBackUrl || '',
+    nomineeName: m.nominee_name || m.nomineeName || '',
+    nomineeMobile: m.nominee_mobile || m.nomineeMobile || '',
+    nomineeNidFrontUrl: m.nominee_nid_front_url || m.nomineeNidFrontUrl || '',
+    nomineeNidBackUrl: m.nominee_nid_back_url || m.nomineeNidBackUrl || '',
     createdAt: m.created_at,
     updatedAt: m.updated_at
   };
@@ -380,7 +384,23 @@ export const membersService = {
   },
 
   async create(body) {
-    const { name, mobile, address, nid, joiningDate, monthlyDepositAmount, status, photoUrl, nidFrontUrl, nidBackUrl } = body;
+    const {
+      name,
+      mobile,
+      address,
+      nid,
+      joiningDate,
+      monthlyDepositAmount,
+      status,
+      photoUrl,
+      nidFrontUrl,
+      nidBackUrl,
+      nomineeName,
+      nomineeMobile,
+      nomineeNidFrontUrl,
+      nomineeNidBackUrl
+    } = body;
+
     const { data, error } = await supabase
       .from('members')
       .insert({
@@ -393,7 +413,11 @@ export const membersService = {
         status: status || 'active',
         photo_url: photoUrl || null,
         nid_front_url: nidFrontUrl || null,
-        nid_back_url: nidBackUrl || null
+        nid_back_url: nidBackUrl || null,
+        nominee_name: nomineeName || null,
+        nominee_mobile: nomineeMobile || null,
+        nominee_nid_front_url: nomineeNidFrontUrl || null,
+        nominee_nid_back_url: nomineeNidBackUrl || null
       })
       .select()
       .single();
@@ -414,6 +438,10 @@ export const membersService = {
     if (body.photoUrl !== undefined) updateData.photo_url = body.photoUrl;
     if (body.nidFrontUrl !== undefined) updateData.nid_front_url = body.nidFrontUrl;
     if (body.nidBackUrl !== undefined) updateData.nid_back_url = body.nidBackUrl;
+    if (body.nomineeName !== undefined) updateData.nominee_name = body.nomineeName;
+    if (body.nomineeMobile !== undefined) updateData.nominee_mobile = body.nomineeMobile;
+    if (body.nomineeNidFrontUrl !== undefined) updateData.nominee_nid_front_url = body.nomineeNidFrontUrl;
+    if (body.nomineeNidBackUrl !== undefined) updateData.nominee_nid_back_url = body.nomineeNidBackUrl;
     updateData.updated_at = new Date().toISOString();
 
     const { data, error } = await supabase

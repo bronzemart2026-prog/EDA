@@ -38,6 +38,10 @@ export default function Members() {
   const [nidFrontPreview, setNidFrontPreview] = useState('');
   const [nidBackFile, setNidBackFile] = useState(null);
   const [nidBackPreview, setNidBackPreview] = useState('');
+  const [nomineeNidFrontFile, setNomineeNidFrontFile] = useState(null);
+  const [nomineeNidFrontPreview, setNomineeNidFrontPreview] = useState('');
+  const [nomineeNidBackFile, setNomineeNidBackFile] = useState(null);
+  const [nomineeNidBackPreview, setNomineeNidBackPreview] = useState('');
   const [previewImage, setPreviewImage] = useState(null); // { url, title }
 
   // Compress & optimize image file to ~100KB on selection
@@ -74,7 +78,11 @@ export default function Members() {
     status: 'active',
     photoUrl: '',
     nidFrontUrl: '',
-    nidBackUrl: ''
+    nidBackUrl: '',
+    nomineeName: '',
+    nomineeMobile: '',
+    nomineeNidFrontUrl: '',
+    nomineeNidBackUrl: ''
   });
 
   const [depositForm, setDepositForm] = useState({
@@ -174,6 +182,8 @@ export default function Members() {
       let photoUrl = memberForm.photoUrl || '';
       let nidFrontUrl = memberForm.nidFrontUrl || '';
       let nidBackUrl = memberForm.nidBackUrl || '';
+      let nomineeNidFrontUrl = memberForm.nomineeNidFrontUrl || '';
+      let nomineeNidBackUrl = memberForm.nomineeNidBackUrl || '';
 
       if (photoFile) {
         toast.loading('সদস্যের ছবি আপলোড হচ্ছে...');
@@ -187,6 +197,14 @@ export default function Members() {
         toast.loading('জাতীয় পরিচয়পত্রের পেছনের ছবি আপলোড হচ্ছে...');
         nidBackUrl = await membersService.uploadDocument(nidBackFile, 'nid-back');
       }
+      if (nomineeNidFrontFile) {
+        toast.loading('নমিনীর জাতীয় পরিচয়পত্রের সামনের ছবি আপলোড হচ্ছে...');
+        nomineeNidFrontUrl = await membersService.uploadDocument(nomineeNidFrontFile, 'nominee-nid-front');
+      }
+      if (nomineeNidBackFile) {
+        toast.loading('নমিনীর জাতীয় পরিচয়পত্রের পেছনের ছবি আপলোড হচ্ছে...');
+        nomineeNidBackUrl = await membersService.uploadDocument(nomineeNidBackFile, 'nominee-nid-back');
+      }
 
       toast.dismiss();
 
@@ -196,7 +214,9 @@ export default function Members() {
           ...memberForm,
           photoUrl,
           nidFrontUrl,
-          nidBackUrl
+          nidBackUrl,
+          nomineeNidFrontUrl,
+          nomineeNidBackUrl
         }
       });
 
@@ -228,6 +248,8 @@ export default function Members() {
       let photoUrl = memberForm.photoUrl || '';
       let nidFrontUrl = memberForm.nidFrontUrl || '';
       let nidBackUrl = memberForm.nidBackUrl || '';
+      let nomineeNidFrontUrl = memberForm.nomineeNidFrontUrl || '';
+      let nomineeNidBackUrl = memberForm.nomineeNidBackUrl || '';
 
       if (photoFile) {
         toast.loading('সদস্যের নতুন ছবি আপলোড হচ্ছে...');
@@ -241,6 +263,14 @@ export default function Members() {
         toast.loading('জাতীয় পরিচয়পত্রের পেছনের নতুন ছবি আপলোড হচ্ছে...');
         nidBackUrl = await membersService.uploadDocument(nidBackFile, 'nid-back');
       }
+      if (nomineeNidFrontFile) {
+        toast.loading('নমিনীর পরিচয়পত্রের সামনের নতুন ছবি আপলোড হচ্ছে...');
+        nomineeNidFrontUrl = await membersService.uploadDocument(nomineeNidFrontFile, 'nominee-nid-front');
+      }
+      if (nomineeNidBackFile) {
+        toast.loading('নমিনীর পরিচয়পত্রের পেছনের নতুন ছবি আপলোড হচ্ছে...');
+        nomineeNidBackUrl = await membersService.uploadDocument(nomineeNidBackFile, 'nominee-nid-back');
+      }
 
       toast.dismiss();
 
@@ -250,7 +280,9 @@ export default function Members() {
           ...memberForm,
           photoUrl,
           nidFrontUrl,
-          nidBackUrl
+          nidBackUrl,
+          nomineeNidFrontUrl,
+          nomineeNidBackUrl
         }
       });
 
@@ -368,14 +400,22 @@ export default function Members() {
       status: member.status,
       photoUrl: member.photoUrl || '',
       nidFrontUrl: member.nidFrontUrl || '',
-      nidBackUrl: member.nidBackUrl || ''
+      nidBackUrl: member.nidBackUrl || '',
+      nomineeName: member.nomineeName || '',
+      nomineeMobile: member.nomineeMobile || '',
+      nomineeNidFrontUrl: member.nomineeNidFrontUrl || '',
+      nomineeNidBackUrl: member.nomineeNidBackUrl || ''
     });
     setPhotoPreview(member.photoUrl || '');
     setNidFrontPreview(member.nidFrontUrl || '');
     setNidBackPreview(member.nidBackUrl || '');
+    setNomineeNidFrontPreview(member.nomineeNidFrontUrl || '');
+    setNomineeNidBackPreview(member.nomineeNidBackUrl || '');
     setPhotoFile(null);
     setNidFrontFile(null);
     setNidBackFile(null);
+    setNomineeNidFrontFile(null);
+    setNomineeNidBackFile(null);
     setShowEditModal(true);
   };
 
@@ -390,14 +430,22 @@ export default function Members() {
       status: 'active',
       photoUrl: '',
       nidFrontUrl: '',
-      nidBackUrl: ''
+      nidBackUrl: '',
+      nomineeName: '',
+      nomineeMobile: '',
+      nomineeNidFrontUrl: '',
+      nomineeNidBackUrl: ''
     });
     setPhotoPreview('');
     setNidFrontPreview('');
     setNidBackPreview('');
+    setNomineeNidFrontPreview('');
+    setNomineeNidBackPreview('');
     setPhotoFile(null);
     setNidFrontFile(null);
     setNidBackFile(null);
+    setNomineeNidFrontFile(null);
+    setNomineeNidBackFile(null);
     setSelectedMember(null);
   };
 
@@ -855,6 +903,56 @@ export default function Members() {
                 </div>
               )}
 
+              {/* Nominee Info & NID Card Documents Preview */}
+              {(activeMemberDetail.member.nomineeName || activeMemberDetail.member.nomineeMobile || activeMemberDetail.member.nomineeNidFrontUrl || activeMemberDetail.member.nomineeNidBackUrl) && (
+                <div className="card" style={{ padding: '12px', marginTop: '10px' }}>
+                  <h5 style={{ fontSize: '0.88rem', marginBottom: '8px', color: 'var(--primary-dark)' }}>নমিনীর বিবরণ ও NID ডকুমেন্টস</h5>
+                  <table style={{ width: '100%', marginBottom: (activeMemberDetail.member.nomineeNidFrontUrl || activeMemberDetail.member.nomineeNidBackUrl) ? '8px' : '0' }}>
+                    <tbody>
+                      {activeMemberDetail.member.nomineeName && (
+                        <tr>
+                          <td style={{ color: 'var(--text-muted)', padding: '3px 0', width: '130px' }}>নমিনীর নাম:</td>
+                          <td style={{ padding: '3px 0', fontWeight: '500' }}>{activeMemberDetail.member.nomineeName}</td>
+                        </tr>
+                      )}
+                      {activeMemberDetail.member.nomineeMobile && (
+                        <tr>
+                          <td style={{ color: 'var(--text-muted)', padding: '3px 0' }}>নমিনীর মোবাইল:</td>
+                          <td style={{ padding: '3px 0' }}>{toBanglaNumber(activeMemberDetail.member.nomineeMobile)}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+
+                  {(activeMemberDetail.member.nomineeNidFrontUrl || activeMemberDetail.member.nomineeNidBackUrl) && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
+                      {activeMemberDetail.member.nomineeNidFrontUrl && (
+                        <div>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>নমিনী NID সামনের অংশ</span>
+                          <div 
+                            style={{ height: '90px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', cursor: 'pointer', background: '#f8fafc' }}
+                            onClick={() => setPreviewImage({ url: activeMemberDetail.member.nomineeNidFrontUrl, title: `${activeMemberDetail.member.nomineeName || activeMemberDetail.member.name} - নমিনী NID সামনের অংশ` })}
+                          >
+                            <img src={activeMemberDetail.member.nomineeNidFrontUrl} alt="Nominee NID Front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                        </div>
+                      )}
+                      {activeMemberDetail.member.nomineeNidBackUrl && (
+                        <div>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>নমিনী NID পেছনের অংশ</span>
+                          <div 
+                            style={{ height: '90px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', cursor: 'pointer', background: '#f8fafc' }}
+                            onClick={() => setPreviewImage({ url: activeMemberDetail.member.nomineeNidBackUrl, title: `${activeMemberDetail.member.nomineeName || activeMemberDetail.member.name} - নমিনী NID পেছনের অংশ` })}
+                          >
+                            <img src={activeMemberDetail.member.nomineeNidBackUrl} alt="Nominee NID Back" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Financial Balance Summary */}
               <div className="grid-2">
                 <div className="kpi-card success" style={{ padding: '10px' }}>
@@ -1054,7 +1152,18 @@ export default function Members() {
                 {/* NID Front & Back Upload */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem' }}>NID সামনের অংশ (ঐচ্ছিক)</label>
+                    <label className="form-label" style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>NID সামনের অংশ (ঐচ্ছিক)</span>
+                      {nidFrontPreview && (
+                        <button 
+                          type="button" 
+                          onClick={() => { setNidFrontFile(null); setNidFrontPreview(''); setMemberForm(prev => ({ ...prev, nidFrontUrl: '' })); }}
+                          style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.72rem', cursor: 'pointer' }}
+                        >
+                          মুছুন
+                        </button>
+                      )}
+                    </label>
                     <div 
                       style={{
                         height: '80px',
@@ -1101,7 +1210,18 @@ export default function Members() {
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem' }}>NID পেছনের অংশ (ঐচ্ছিক)</label>
+                    <label className="form-label" style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>NID পেছনের অংশ (ঐচ্ছিক)</span>
+                      {nidBackPreview && (
+                        <button 
+                          type="button" 
+                          onClick={() => { setNidBackFile(null); setNidBackPreview(''); setMemberForm(prev => ({ ...prev, nidBackUrl: '' })); }}
+                          style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.72rem', cursor: 'pointer' }}
+                        >
+                          মুছুন
+                        </button>
+                      )}
+                    </label>
                     <div 
                       style={{
                         height: '80px',
@@ -1145,6 +1265,155 @@ export default function Members() {
                         পরিবর্তন করুন
                       </label>
                     )}
+                  </div>
+                </div>
+
+                {/* Nominee Details & NID Documents */}
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px' }}>
+                  <h4 style={{ fontSize: '0.9rem', color: 'var(--primary-dark)', marginBottom: '10px' }}>নমিনীর তথ্য ও NID কার্ড (ঐচ্ছিক)</h4>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>নমিনীর নাম</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="নমিনীর পূর্ণ নাম"
+                        value={memberForm.nomineeName || ''}
+                        onChange={(e) => setMemberForm({ ...memberForm, nomineeName: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>নমিনীর মোবাইল নম্বর</label>
+                      <input
+                        type="tel"
+                        maxLength="16"
+                        className="form-control"
+                        placeholder="০১৭xxxxxxxx"
+                        value={memberForm.nomineeMobile || ''}
+                        onChange={(e) => setMemberForm({ ...memberForm, nomineeMobile: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    {/* Nominee NID Front */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>নমিনী NID সামনের অংশ</span>
+                        {nomineeNidFrontPreview && (
+                          <button 
+                            type="button" 
+                            onClick={() => { setNomineeNidFrontFile(null); setNomineeNidFrontPreview(''); setMemberForm(prev => ({ ...prev, nomineeNidFrontUrl: '' })); }}
+                            style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.7rem', cursor: 'pointer' }}
+                          >
+                            মুছুন
+                          </button>
+                        )}
+                      </label>
+                      <div 
+                        style={{
+                          height: '75px',
+                          borderRadius: '8px',
+                          border: '2px dashed var(--border)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          background: '#fff',
+                          position: 'relative'
+                        }}
+                      >
+                        {nomineeNidFrontPreview ? (
+                          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                            <img src={nomineeNidFrontPreview} alt="Nominee NID Front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button
+                              type="button"
+                              onClick={() => setPreviewImage({ url: nomineeNidFrontPreview, title: 'নমিনীর জাতীয় পরিচয়পত্র (সামনের অংশ)' })}
+                              style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '4px', padding: '2px 5px', cursor: 'pointer' }}
+                            >
+                              <Eye size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <label htmlFor="add-nominee-nid-front" style={{ cursor: 'pointer', textAlign: 'center', padding: '6px' }}>
+                            <Upload size={16} style={{ color: 'var(--text-muted)', margin: '0 auto 2px' }} />
+                            <span style={{ fontSize: '0.7rem', color: 'var(--primary)', display: 'block' }}>আপলোড</span>
+                          </label>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id="add-nominee-nid-front"
+                          style={{ display: 'none' }}
+                          onChange={(e) => handleImageFileChange(e.target.files?.[0], setNomineeNidFrontFile, setNomineeNidFrontPreview)}
+                        />
+                      </div>
+                      {nomineeNidFrontPreview && (
+                        <label htmlFor="add-nominee-nid-front" style={{ fontSize: '0.7rem', color: 'var(--primary)', cursor: 'pointer', display: 'block', marginTop: '2px', textAlign: 'center' }}>
+                          পরিবর্তন করুন
+                        </label>
+                      )}
+                    </div>
+
+                    {/* Nominee NID Back */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>নমিনী NID পেছনের অংশ</span>
+                        {nomineeNidBackPreview && (
+                          <button 
+                            type="button" 
+                            onClick={() => { setNomineeNidBackFile(null); setNomineeNidBackPreview(''); setMemberForm(prev => ({ ...prev, nomineeNidBackUrl: '' })); }}
+                            style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.7rem', cursor: 'pointer' }}
+                          >
+                            মুছুন
+                          </button>
+                        )}
+                      </label>
+                      <div 
+                        style={{
+                          height: '75px',
+                          borderRadius: '8px',
+                          border: '2px dashed var(--border)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          background: '#fff',
+                          position: 'relative'
+                        }}
+                      >
+                        {nomineeNidBackPreview ? (
+                          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                            <img src={nomineeNidBackPreview} alt="Nominee NID Back" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button
+                              type="button"
+                              onClick={() => setPreviewImage({ url: nomineeNidBackPreview, title: 'নমিনীর জাতীয় পরিচয়পত্র (পেছনের অংশ)' })}
+                              style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '4px', padding: '2px 5px', cursor: 'pointer' }}
+                            >
+                              <Eye size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <label htmlFor="add-nominee-nid-back" style={{ cursor: 'pointer', textAlign: 'center', padding: '6px' }}>
+                            <Upload size={16} style={{ color: 'var(--text-muted)', margin: '0 auto 2px' }} />
+                            <span style={{ fontSize: '0.7rem', color: 'var(--primary)', display: 'block' }}>আপলোড</span>
+                          </label>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id="add-nominee-nid-back"
+                          style={{ display: 'none' }}
+                          onChange={(e) => handleImageFileChange(e.target.files?.[0], setNomineeNidBackFile, setNomineeNidBackPreview)}
+                        />
+                      </div>
+                      {nomineeNidBackPreview && (
+                        <label htmlFor="add-nominee-nid-back" style={{ fontSize: '0.7rem', color: 'var(--primary)', cursor: 'pointer', display: 'block', marginTop: '2px', textAlign: 'center' }}>
+                          পরিবর্তন করুন
+                        </label>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -1311,7 +1580,18 @@ export default function Members() {
                 {/* NID Front & Back Upload */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem' }}>NID সামনের অংশ</label>
+                    <label className="form-label" style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>NID সামনের অংশ</span>
+                      {nidFrontPreview && (
+                        <button 
+                          type="button" 
+                          onClick={() => { setNidFrontFile(null); setNidFrontPreview(''); setMemberForm(prev => ({ ...prev, nidFrontUrl: '' })); }}
+                          style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.72rem', cursor: 'pointer' }}
+                        >
+                          মুছুন
+                        </button>
+                      )}
+                    </label>
                     <div 
                       style={{
                         height: '80px',
@@ -1358,7 +1638,18 @@ export default function Members() {
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem' }}>NID পেছনের অংশ</label>
+                    <label className="form-label" style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>NID পেছনের অংশ</span>
+                      {nidBackPreview && (
+                        <button 
+                          type="button" 
+                          onClick={() => { setNidBackFile(null); setNidBackPreview(''); setMemberForm(prev => ({ ...prev, nidBackUrl: '' })); }}
+                          style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.72rem', cursor: 'pointer' }}
+                        >
+                          মুছুন
+                        </button>
+                      )}
+                    </label>
                     <div 
                       style={{
                         height: '80px',
@@ -1402,6 +1693,155 @@ export default function Members() {
                         পরিবর্তন করুন
                       </label>
                     )}
+                  </div>
+                </div>
+
+                {/* Nominee Details & NID Documents */}
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px' }}>
+                  <h4 style={{ fontSize: '0.9rem', color: 'var(--primary-dark)', marginBottom: '10px' }}>নমিনীর তথ্য ও NID কার্ড (ঐচ্ছিক)</h4>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>নমিনীর নাম</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="নমিনীর পূর্ণ নাম"
+                        value={memberForm.nomineeName || ''}
+                        onChange={(e) => setMemberForm({ ...memberForm, nomineeName: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>নমিনীর মোবাইল নম্বর</label>
+                      <input
+                        type="tel"
+                        maxLength="16"
+                        className="form-control"
+                        placeholder="০১৭xxxxxxxx"
+                        value={memberForm.nomineeMobile || ''}
+                        onChange={(e) => setMemberForm({ ...memberForm, nomineeMobile: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    {/* Nominee NID Front */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>নমিনী NID সামনের অংশ</span>
+                        {nomineeNidFrontPreview && (
+                          <button 
+                            type="button" 
+                            onClick={() => { setNomineeNidFrontFile(null); setNomineeNidFrontPreview(''); setMemberForm(prev => ({ ...prev, nomineeNidFrontUrl: '' })); }}
+                            style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.7rem', cursor: 'pointer' }}
+                          >
+                            মুছুন
+                          </button>
+                        )}
+                      </label>
+                      <div 
+                        style={{
+                          height: '75px',
+                          borderRadius: '8px',
+                          border: '2px dashed var(--border)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          background: '#fff',
+                          position: 'relative'
+                        }}
+                      >
+                        {nomineeNidFrontPreview ? (
+                          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                            <img src={nomineeNidFrontPreview} alt="Nominee NID Front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button
+                              type="button"
+                              onClick={() => setPreviewImage({ url: nomineeNidFrontPreview, title: 'নমিনীর জাতীয় পরিচয়পত্র (সামনের অংশ)' })}
+                              style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '4px', padding: '2px 5px', cursor: 'pointer' }}
+                            >
+                              <Eye size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <label htmlFor="edit-nominee-nid-front" style={{ cursor: 'pointer', textAlign: 'center', padding: '6px' }}>
+                            <Upload size={16} style={{ color: 'var(--text-muted)', margin: '0 auto 2px' }} />
+                            <span style={{ fontSize: '0.7rem', color: 'var(--primary)', display: 'block' }}>আপলোড</span>
+                          </label>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id="edit-nominee-nid-front"
+                          style={{ display: 'none' }}
+                          onChange={(e) => handleImageFileChange(e.target.files?.[0], setNomineeNidFrontFile, setNomineeNidFrontPreview)}
+                        />
+                      </div>
+                      {nomineeNidFrontPreview && (
+                        <label htmlFor="edit-nominee-nid-front" style={{ fontSize: '0.7rem', color: 'var(--primary)', cursor: 'pointer', display: 'block', marginTop: '2px', textAlign: 'center' }}>
+                          পরিবর্তন করুন
+                        </label>
+                      )}
+                    </div>
+
+                    {/* Nominee NID Back */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>নমিনী NID পেছনের অংশ</span>
+                        {nomineeNidBackPreview && (
+                          <button 
+                            type="button" 
+                            onClick={() => { setNomineeNidBackFile(null); setNomineeNidBackPreview(''); setMemberForm(prev => ({ ...prev, nomineeNidBackUrl: '' })); }}
+                            style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.7rem', cursor: 'pointer' }}
+                          >
+                            মুছুন
+                          </button>
+                        )}
+                      </label>
+                      <div 
+                        style={{
+                          height: '75px',
+                          borderRadius: '8px',
+                          border: '2px dashed var(--border)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          background: '#fff',
+                          position: 'relative'
+                        }}
+                      >
+                        {nomineeNidBackPreview ? (
+                          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                            <img src={nomineeNidBackPreview} alt="Nominee NID Back" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button
+                              type="button"
+                              onClick={() => setPreviewImage({ url: nomineeNidBackPreview, title: 'নমিনীর জাতীয় পরিচয়পত্র (পেছনের অংশ)' })}
+                              style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '4px', padding: '2px 5px', cursor: 'pointer' }}
+                            >
+                              <Eye size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <label htmlFor="edit-nominee-nid-back" style={{ cursor: 'pointer', textAlign: 'center', padding: '6px' }}>
+                            <Upload size={16} style={{ color: 'var(--text-muted)', margin: '0 auto 2px' }} />
+                            <span style={{ fontSize: '0.7rem', color: 'var(--primary)', display: 'block' }}>আপলোড</span>
+                          </label>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id="edit-nominee-nid-back"
+                          style={{ display: 'none' }}
+                          onChange={(e) => handleImageFileChange(e.target.files?.[0], setNomineeNidBackFile, setNomineeNidBackPreview)}
+                        />
+                      </div>
+                      {nomineeNidBackPreview && (
+                        <label htmlFor="edit-nominee-nid-back" style={{ fontSize: '0.7rem', color: 'var(--primary)', cursor: 'pointer', display: 'block', marginTop: '2px', textAlign: 'center' }}>
+                          পরিবর্তন করুন
+                        </label>
+                      )}
+                    </div>
                   </div>
                 </div>
 
