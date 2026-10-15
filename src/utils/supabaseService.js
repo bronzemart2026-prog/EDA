@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, createIsolatedAuthClient } from './supabase';
 import { calculateMonthsElapsed, generateMonthList, calculateMemberMetrics } from './memberCalculations';
 import {
   calcProjectMetrics,
@@ -19,6 +19,8 @@ export const mapMemberFromDb = (m) => {
     memberId: m.member_id,
     name: m.name,
     mobile: m.mobile,
+    profession: m.profession || '',
+    designation: m.designation || '',
     address: m.address,
     nid: m.nid,
     joiningDate: m.joining_date,
@@ -167,16 +169,34 @@ export const authService = {
     });
 
     if (authError) {
+      if (authError.message?.includes('Database error querying schema') || authError.status === 500) {
+        throw new Error('ডাটাবেজ একাউন্ট যাচাইকরণ ত্রুটি (Supabase Auth এ টোকেন সংক্রান্ত সমস্যা)');
+      }
       throw new Error('ভুল ফোন নম্বর, ইউজারনেম বা পাসওয়ার্ড');
     }
 
-    const { data: profile, error: profileError } = await supabase
+    let profile = null;
+    const { data: profileWithMember, error: profileError } = await supabase
       .from('profiles')
       .select('*, members(*)')
       .eq('id', authData.user.id)
-      .single();
+      .maybeSingle();
 
-    if (profileError || !profile) {
+    if (!profileError && profileWithMember) {
+      profile = profileWithMember;
+    } else {
+      // Fallback to direct profiles table fetch if foreign key join failed
+      const { data: basicProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+      if (basicProfile) {
+        profile = basicProfile;
+      }
+    }
+
+    if (!profile) {
       await supabase.auth.signOut();
       throw new Error('ব্যবহারকারী প্রোফাইল পাওয়া যায়নি');
     }
@@ -197,13 +217,27 @@ export const authService = {
       throw new Error('সেশন পাওয়া যায়নি');
     }
 
-    const { data: profile, error: profileError } = await supabase
+    let profile = null;
+    const { data: profileWithMember, error: profileError } = await supabase
       .from('profiles')
       .select('*, members(*)')
       .eq('id', session.user.id)
-      .single();
+      .maybeSingle();
 
-    if (profileError || !profile) {
+    if (!profileError && profileWithMember) {
+      profile = profileWithMember;
+    } else {
+      const { data: basicProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      if (basicProfile) {
+        profile = basicProfile;
+      }
+    }
+
+    if (!profile) {
       throw new Error('ব্যবহারকারী পাওয়া যায়নি');
     }
 
@@ -234,24 +268,83 @@ export const usersService = {
       throw new Error('নাম, মোবাইল, ইউজারনেম এবং পাসওয়ার্ড পূরণ করা আবশ্যক');
     }
 
-    const { data, error } = await supabase.rpc('admin_create_user', {
-      p_name: name.trim(),
-      p_mobile: mobile.trim(),
-      p_username: username.trim().toLowerCase(),
-      p_password: password,
-      p_role: role || 'member',
-      p_status: status || 'active',
-      p_member_id: memberId || null
-    });
+    const cleanUsername = String(username).trim().toLowerCase();
+    const cleanMobile = String(mobile).trim();
+    const cleanName = String(name).trim();
+    const email = cleanUsername.includes('@') ? cleanUsername : `${cleanUsername}@somiti.com`;
 
-    if (error) {
-      if (error.message.includes('unique') || error.message.includes('duplicate')) {
+    // 1. Check if username or mobile already exists in profiles
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('id, username, mobile')
+      .or(`username.eq.${cleanUsername},mobile.eq.${cleanMobile}`)
+      .maybeSingle();
+
+    if (existingUser) {
+      if (existingUser.username?.toLowerCase() === cleanUsername) {
         throw new Error('ইউজারনেমটি ইতিমধ্যে ব্যবহৃত হয়েছে');
       }
-      throw new Error(error.message);
+      if (existingUser.mobile === cleanMobile) {
+        throw new Error('মোবাইল নম্বরটি ইতিমধ্যে ব্যবহৃত হয়েছে');
+      }
     }
 
-    return data;
+    // 2. Create user via isolated auth client (signUp) so current admin session is untouched
+    // and GoTrue correctly formats auth.users and auth.identities
+    const authClient = createIsolatedAuthClient();
+    const { data: signUpData, error: signUpErr } = await authClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: cleanName,
+          mobile: cleanMobile,
+          username: cleanUsername,
+          role: role || 'member'
+        }
+      }
+    });
+
+    if (signUpErr) {
+      if (signUpErr.message?.toLowerCase().includes('already registered')) {
+        throw new Error('এই ইউজারনেম বা ইমেইল দিয়ে ইতিমধ্যে অ্যাকাউন্ট তৈরি আছে');
+      }
+      throw new Error(signUpErr.message);
+    }
+
+    const newUserId = signUpData?.user?.id;
+    if (!newUserId) {
+      throw new Error('ব্যবহারকারী অ্যাকাউন্ট তৈরি করতে ব্যর্থ হয়েছে');
+    }
+
+    // 3. Upsert public.profiles with complete details (member_id, status, role, etc.)
+    const { error: profileErr } = await supabase
+      .from('profiles')
+      .upsert({
+        id: newUserId,
+        name: cleanName,
+        mobile: cleanMobile,
+        username: cleanUsername,
+        role: role || 'member',
+        status: status || 'active',
+        member_id: memberId || null,
+        updated_at: new Date().toISOString()
+      });
+
+    if (profileErr) {
+      console.warn('Profile update warning:', profileErr);
+    }
+
+    return {
+      _id: newUserId,
+      id: newUserId,
+      name: cleanName,
+      mobile: cleanMobile,
+      username: cleanUsername,
+      role: role || 'member',
+      status: status || 'active',
+      memberId: memberId || null
+    };
   },
 
   async update(id, body) {
@@ -319,7 +412,13 @@ export const membersService = {
     const totalDue = Math.max(0, expectedDeposits - totalDeposited);
 
     const expectedMonths = generateMonthList(mappedMember.joiningDate);
-    const schedule = expectedMonths.map((mStr) => {
+    const monthSet = new Set(expectedMonths);
+    mappedDeposits.forEach((d) => {
+      if (d.month) monthSet.add(d.month);
+    });
+    const allMonths = Array.from(monthSet).sort();
+
+    const schedule = allMonths.map((mStr) => {
       const monthDeposits = mappedDeposits.filter((d) => d.month === mStr);
       const paidAmount = monthDeposits.reduce((sum, d) => sum + d.amount, 0);
       const isPaid = paidAmount >= mappedMember.monthlyDepositAmount;
@@ -385,8 +484,11 @@ export const membersService = {
 
   async create(body) {
     const {
+      memberId,
       name,
       mobile,
+      profession,
+      designation,
       address,
       nid,
       joiningDate,
@@ -401,11 +503,37 @@ export const membersService = {
       nomineeNidBackUrl
     } = body;
 
+    let finalMemberId = memberId || body.member_id;
+    if (!finalMemberId) {
+      try {
+        const { data: existingMembers } = await supabase
+          .from('members')
+          .select('member_id')
+          .order('created_at', { ascending: false });
+
+        let nextNum = 1;
+        if (existingMembers && existingMembers.length > 0) {
+          const nums = existingMembers
+            .map(m => parseInt(String(m.member_id).replace(/\D/g, ''), 10))
+            .filter(n => !isNaN(n));
+          if (nums.length > 0) {
+            nextNum = Math.max(...nums) + 1;
+          }
+        }
+        finalMemberId = String(nextNum).padStart(3, '0');
+      } catch (genErr) {
+        finalMemberId = String(Date.now()).slice(-4);
+      }
+    }
+
     const { data, error } = await supabase
       .from('members')
       .insert({
+        member_id: finalMemberId,
         name,
         mobile,
+        profession: profession || null,
+        designation: designation || null,
         address,
         nid,
         joining_date: joiningDate,
@@ -430,6 +558,8 @@ export const membersService = {
     const updateData = {};
     if (body.name !== undefined) updateData.name = body.name;
     if (body.mobile !== undefined) updateData.mobile = body.mobile;
+    if (body.profession !== undefined) updateData.profession = body.profession;
+    if (body.designation !== undefined) updateData.designation = body.designation;
     if (body.address !== undefined) updateData.address = body.address;
     if (body.nid !== undefined) updateData.nid = body.nid;
     if (body.joiningDate !== undefined) updateData.joining_date = body.joiningDate;

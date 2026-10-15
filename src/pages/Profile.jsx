@@ -218,10 +218,24 @@ export default function Profile() {
                 <td style={{ wordBreak: 'break-all' }}>{toBanglaNumber(user.mobile)}</td>
               </tr>
               {user.memberId && (
-                <tr>
-                  <td style={{ color: 'var(--text-muted)', padding: '6px 0', whiteSpace: 'nowrap' }}>লিঙ্কড সদস্য আইডি:</td>
-                  <td style={{ fontWeight: 600, wordBreak: 'break-all' }}>{toBanglaNumber(user.memberId.memberId || '')}</td>
-                </tr>
+                <>
+                  <tr>
+                    <td style={{ color: 'var(--text-muted)', padding: '6px 0', whiteSpace: 'nowrap' }}>লিঙ্কড সদস্য আইডি:</td>
+                    <td style={{ fontWeight: 600, wordBreak: 'break-all' }}>{toBanglaNumber(user.memberId.memberId || '')}</td>
+                  </tr>
+                  {user.memberId.designation && (
+                    <tr>
+                      <td style={{ color: 'var(--text-muted)', padding: '6px 0', whiteSpace: 'nowrap' }}>পদবী:</td>
+                      <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{user.memberId.designation}</td>
+                    </tr>
+                  )}
+                  {user.memberId.profession && (
+                    <tr>
+                      <td style={{ color: 'var(--text-muted)', padding: '6px 0', whiteSpace: 'nowrap' }}>পেশা:</td>
+                      <td>{user.memberId.profession}</td>
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>

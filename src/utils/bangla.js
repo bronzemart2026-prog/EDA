@@ -62,3 +62,67 @@ export const formatBanglaDate = (dateInput) => {
 export const formatBDT = (amount) => {
   return `${toBanglaNumber(amount)} ৳`;
 };
+
+const banglaNumbersWords = [
+  '', 'এক', 'দুই', 'তিন', 'চার', 'পাঁচ', 'ছয়', 'সাত', 'আট', 'নয়', 'দশ',
+  'এগারো', 'বারো', 'তেরো', 'চৌদ্দ', 'পনেরো', 'ষোলো', 'সতেরো', 'আঠারো', 'উনিশ', 'বিশ',
+  'একুশ', 'বাইশ', 'তেইশ', 'চব্বিশ', 'পঁচিশ', 'ছাব্বিশ', 'সাতাশ', 'আঠাশ', 'উনত্রিশ', 'ত্রিশ',
+  'একত্রিশ', 'বত্রিশ', 'তেত্রিশ', 'চৌত্রিশ', 'পঁয়ত্রিশ', 'ছত্রিশ', 'সাঁইত্রিশ', 'আটত্রিশ', 'উনচল্লিশ', 'চল্লিশ',
+  'একচল্লিশ', 'বিয়াল্লিশ', 'তেতাল্লিশ', 'চুয়াল্লিশ', 'পঁয়তাল্লিশ', 'ছেচল্লিশ', 'সাতচল্লিশ', 'আটচল্লিশ', 'উনপঞ্চাশ', 'পঞ্চাশ',
+  'একান্ন', 'বায়ান্ন', 'তিপ্পান্ন', 'চুয়ান্ন', 'পঞ্চান্ন', 'ছাপ্পান্ন', 'সাতান্ন', 'আটান্ন', 'উনষাট', 'ষাট',
+  'একষট্টি', 'বাষট্টি', 'তেষট্টি', 'চৌষট্টি', 'পঁয়ষট্টি', 'ছেষট্টি', 'সাতষট্টি', 'আটষট্টি', 'উনসত্তর', 'সত্তর',
+  'একাত্তর', 'বাহাত্তর', 'তিয়াত্তর', 'চুয়াত্তর', 'পঁচাত্তর', 'ছিয়াত্তর', 'সাতাত্তর', 'আটাত্তর', 'উনাশি', 'আশি',
+  'একাশি', 'বিরাশি', 'তিরাশি', 'চুরাশি', 'পঁচাশি', 'ছিয়াশি', 'সাতাশি', 'আটাশি', 'ঊননব্বই', 'নব্বই',
+  'একানব্বই', 'বানব্বই', 'তিরানব্বই', 'চুরানব্বই', 'পঁচানব্বই', 'ছিয়ানব্বই', 'সাতানব্বই', 'আটানব্বই', 'নিরানব্বই'
+];
+
+/**
+ * Converts a numeric amount to Bangla words (e.g. 1500 -> "এক হাজার পাঁচ শত টাকা মাত্র").
+ * @param {number|string} amount
+ * @returns {string}
+ */
+export const numberToBanglaWords = (amount) => {
+  const n = Math.floor(Math.abs(Number(amount) || 0));
+  if (n === 0) return 'শূন্য টাকা মাত্র';
+
+  const convertTwoDigits = (num) => banglaNumbersWords[num] || '';
+
+  let words = '';
+  let rem = n;
+
+  // Crore (কোটি)
+  const crore = Math.floor(rem / 10000000);
+  rem %= 10000000;
+  if (crore > 0) {
+    words += (crore < 100 ? convertTwoDigits(crore) : numberToBanglaWords(crore).replace(' টাকা মাত্র', '')) + ' কোটি ';
+  }
+
+  // Lakh (লাখ)
+  const lakh = Math.floor(rem / 100000);
+  rem %= 100000;
+  if (lakh > 0) {
+    words += convertTwoDigits(lakh) + ' লাখ ';
+  }
+
+  // Thousand (হাজার)
+  const thousand = Math.floor(rem / 1000);
+  rem %= 1000;
+  if (thousand > 0) {
+    words += convertTwoDigits(thousand) + ' হাজার ';
+  }
+
+  // Hundred (শত)
+  const hundred = Math.floor(rem / 100);
+  rem %= 100;
+  if (hundred > 0) {
+    words += convertTwoDigits(hundred) + ' শত ';
+  }
+
+  // Remainder (1-99)
+  if (rem > 0) {
+    words += convertTwoDigits(rem) + ' ';
+  }
+
+  return words.trim() + ' টাকা মাত্র';
+};
+

@@ -12,6 +12,7 @@ import { Plus, Search, Info, PlusCircle, History, Edit, X, Save, Calendar, Downl
 import { exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { membersService } from '../utils/supabaseService';
 import { optimizeImageToTargetSize } from '../utils/imageOptimizer';
+import MemberIdCardModal from '../components/MemberIdCardModal';
 
 export default function Members() {
   const { user } = useAuth();
@@ -30,6 +31,8 @@ export default function Members() {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [receiptData, setReceiptData] = useState(null); // For receipt modal
+  const [idCardMember, setIdCardMember] = useState(null); // For ID Card download modal
+  const [useMonthPicker, setUseMonthPicker] = useState(false); // Toggle between dropdown & calendar picker
 
   // Image Upload and Preview state
   const [photoFile, setPhotoFile] = useState(null);
@@ -71,6 +74,8 @@ export default function Members() {
   const [memberForm, setMemberForm] = useState({
     name: '',
     mobile: '',
+    profession: '',
+    designation: '',
     address: '',
     nid: '',
     joiningDate: '',
@@ -114,7 +119,9 @@ export default function Members() {
   const filteredMembers = members.filter(member =>
     member.name.toLowerCase().includes(search.toLowerCase()) ||
     member.memberId.toLowerCase().includes(search.toLowerCase()) ||
-    member.mobile.includes(search)
+    member.mobile.includes(search) ||
+    (member.profession && member.profession.toLowerCase().includes(search.toLowerCase())) ||
+    (member.designation && member.designation.toLowerCase().includes(search.toLowerCase()))
   );
 
   // Pagination state
@@ -134,6 +141,8 @@ export default function Members() {
     const cols = [
       { header: 'সদস্য আইডি', key: 'memberId' },
       { header: 'নাম', key: 'name' },
+      { header: 'পদবী', key: 'designation' },
+      { header: 'পেশা', key: 'profession' },
       { header: 'মোবাইল', key: 'mobile' },
       { header: 'ঠিকানা', key: 'address' },
       { header: 'জাতীয় পরিচয়পত্র', key: 'nid' },
@@ -158,6 +167,8 @@ export default function Members() {
     const cols = [
       { header: 'আইডি', key: 'memberId' },
       { header: 'নাম', key: 'name' },
+      { header: 'পদবী', key: 'designation' },
+      { header: 'পেশা', key: 'profession' },
       { header: 'মোবাইল', key: 'mobile' },
       { header: 'মোট সঞ্চয়', key: 'totalDepositedFormatted' },
       { header: 'বকেয়া সঞ্চয়', key: 'totalDueFormatted' },
@@ -393,6 +404,8 @@ export default function Members() {
     setMemberForm({
       name: member.name,
       mobile: member.mobile,
+      profession: member.profession || '',
+      designation: member.designation || '',
       address: member.address,
       nid: member.nid,
       joiningDate: new Date(member.joiningDate).toISOString().split('T')[0],
@@ -423,6 +436,8 @@ export default function Members() {
     setMemberForm({
       name: '',
       mobile: '',
+      profession: '',
+      designation: '',
       address: '',
       nid: '',
       joiningDate: '',
@@ -449,27 +464,42 @@ export default function Members() {
     setSelectedMember(null);
   };
 
-  // Generate Month list for select input starting from member's joining date up to current month
+  // Generate Month list for select input across years (grouped by year, past to future)
   const getMonthDropdownOptions = (joiningDate) => {
-    const list = [];
     const today = new Date();
     const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
 
-    // Start from joining date if provided, else fall back to 12 months ago
-    const start = joiningDate ? new Date(joiningDate) : new Date(today.getFullYear(), today.getMonth() - 12, 1);
-    const startYear = start.getFullYear();
-    const startMonth = start.getMonth();
-
-    for (let y = startYear; y <= currentYear; y++) {
-      const mStart = (y === startYear) ? startMonth : 0;
-      const mEnd   = (y === currentYear) ? currentMonth : 11;
-      for (let m = mStart; m <= mEnd; m++) {
-        const val = `${y}-${String(m + 1).padStart(2, '0')}`;
-        list.push(val);
+    // Range: from 3 years ago (or member's joining year if earlier) to 3 years into the future
+    let startYear = currentYear - 3;
+    if (joiningDate) {
+      const jDate = new Date(joiningDate);
+      if (!isNaN(jDate.getTime()) && jDate.getFullYear() < startYear) {
+        startYear = jDate.getFullYear();
       }
     }
-    return list;
+    let endYear = currentYear + 3;
+
+    if (depositForm.month) {
+      const selYear = parseInt(depositForm.month.split('-')[0], 10);
+      if (!isNaN(selYear)) {
+        if (selYear < startYear) startYear = selYear;
+        if (selYear > endYear) endYear = selYear;
+      }
+    }
+
+    const groups = [];
+    for (let y = startYear; y <= endYear; y++) {
+      const months = [];
+      for (let m = 0; m < 12; m++) {
+        const val = `${y}-${String(m + 1).padStart(2, '0')}`;
+        months.push(val);
+      }
+      let label = toBanglaNumber(y);
+      if (y === currentYear) label += ' (চলতি বছর)';
+      else if (y > currentYear) label += ' (অগ্রিম)';
+      groups.push({ year: y, label, months });
+    }
+    return groups;
   };
 
   // --- Delete handlers ---
@@ -690,9 +720,17 @@ export default function Members() {
                     )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <h4 style={{ fontSize: '1rem', color: 'var(--primary-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</h4>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <h4 style={{ fontSize: '1rem', color: 'var(--primary-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</h4>
+                      {member.designation && (
+                        <span style={{ fontSize: '0.7rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: 'rgba(2, 132, 199, 0.1)', color: 'var(--primary)', fontWeight: '600' }}>
+                          {member.designation}
+                        </span>
+                      )}
+                    </div>
                     <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.5 }}>
                       আইডি: <strong>{toBanglaNumber(member.memberId)}</strong> · {toBanglaNumber(member.mobile)}
+                      {member.profession && ` · ${member.profession}`}
                     </p>
                   </div>
                 </div>
@@ -844,6 +882,18 @@ export default function Members() {
 
                 <table style={{ width: '100%' }}>
                   <tbody>
+                    {activeMemberDetail.member.designation && (
+                      <tr>
+                        <td style={{ color: 'var(--text-muted)', padding: '4px 0' }}>পদবী:</td>
+                        <td style={{ padding: '4px 0', fontWeight: '600', color: 'var(--primary)' }}>{activeMemberDetail.member.designation}</td>
+                      </tr>
+                    )}
+                    {activeMemberDetail.member.profession && (
+                      <tr>
+                        <td style={{ color: 'var(--text-muted)', padding: '4px 0' }}>পেশা:</td>
+                        <td style={{ padding: '4px 0', fontWeight: '500' }}>{activeMemberDetail.member.profession}</td>
+                      </tr>
+                    )}
                     <tr>
                       <td style={{ color: 'var(--text-muted)', padding: '4px 0' }}>মোবাইল নম্বর:</td>
                       <td style={{ padding: '4px 0' }}>{toBanglaNumber(activeMemberDetail.member.mobile)}</td>
@@ -870,6 +920,33 @@ export default function Members() {
                     </tr>
                   </tbody>
                 </table>
+
+                {/* Download Official Member ID Card Button */}
+                <button
+                  type="button"
+                  className="btn"
+                  style={{
+                    width: '100%',
+                    marginTop: '12px',
+                    height: '42px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.92rem',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #075936 0%, #054429 100%)',
+                    boxShadow: '0 4px 12px rgba(7, 89, 54, 0.25)',
+                    color: '#ffffff',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setIdCardMember(activeMemberDetail.member)}
+                >
+                  <Download size={18} />
+                  <span>আইডি কার্ড ডাউনলোড (Download ID Card)</span>
+                </button>
               </div>
 
               {/* NID Card Documents Preview */}
@@ -988,18 +1065,26 @@ export default function Members() {
                     </tr>
                   </thead>
                   <tbody>
-                    {activeMemberDetail.schedule.map((item, idx) => (
-                      <tr key={idx}>
-                        <td style={{ padding: '8px' }}>{formatBanglaMonth(item.month)}</td>
-                        <td style={{ padding: '8px' }}>{formatBDT(item.paidAmount)}</td>
-                        <td style={{ padding: '8px', textAlign: 'right' }}>
-                          <span className={`list-badge ${item.status === 'PAID' ? 'badge-success' : (item.status === 'PARTIAL' ? 'badge-warning' : 'badge-danger')
-                            }`}>
-                            {item.status === 'PAID' ? 'পরিশোধিত' : (item.status === 'PARTIAL' ? 'আংশিক' : 'বকেয়া')}
-                          </span>
+                    {(!activeMemberDetail.schedule || activeMemberDetail.schedule.length === 0) ? (
+                      <tr>
+                        <td colSpan="3" style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                          কোনো জমার বিবরণী পাওয়া যায়নি
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      activeMemberDetail.schedule.map((item, idx) => (
+                        <tr key={idx}>
+                          <td style={{ padding: '8px' }}>{formatBanglaMonth(item.month)}</td>
+                          <td style={{ padding: '8px' }}>{formatBDT(item.paidAmount)}</td>
+                          <td style={{ padding: '8px', textAlign: 'right' }}>
+                            <span className={`list-badge ${item.status === 'PAID' ? 'badge-success' : (item.status === 'PARTIAL' ? 'badge-warning' : 'badge-danger')
+                              }`}>
+                              {item.status === 'PAID' ? 'পরিশোধিত' : (item.status === 'PARTIAL' ? 'আংশিক' : 'বকেয়া')}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1065,6 +1150,29 @@ export default function Members() {
                     value={memberForm.mobile}
                     onChange={(e) => setMemberForm({ ...memberForm, mobile: e.target.value })}
                   />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group">
+                    <label className="form-label">পদবী (ঐচ্ছিক)</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="যেমন: সভাপতি, সাধারণ সম্পাদক বা সদস্য"
+                      value={memberForm.designation}
+                      onChange={(e) => setMemberForm({ ...memberForm, designation: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">পেশা (ঐচ্ছিক)</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="যেমন: ব্যবসায়ী, চাকুরীজীবী, শিক্ষক"
+                      value={memberForm.profession}
+                      onChange={(e) => setMemberForm({ ...memberForm, profession: e.target.value })}
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -1497,6 +1605,29 @@ export default function Members() {
                   />
                 </div>
 
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group">
+                    <label className="form-label">পদবী (ঐচ্ছিক)</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="যেমন: সভাপতি, সাধারণ সম্পাদক বা সদস্য"
+                      value={memberForm.designation}
+                      onChange={(e) => setMemberForm({ ...memberForm, designation: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">পেশা (ঐচ্ছিক)</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="যেমন: ব্যবসায়ী, চাকুরীজীবী, শিক্ষক"
+                      value={memberForm.profession}
+                      onChange={(e) => setMemberForm({ ...memberForm, profession: e.target.value })}
+                    />
+                  </div>
+                </div>
+
                 <div className="form-group">
                   <label className="form-label">জাতীয় পরিচয়পত্র (NID) নম্বর</label>
                   <input
@@ -1906,20 +2037,51 @@ export default function Members() {
 
               <form onSubmit={handleDepositSubmit}>
                 <div className="form-group">
-                  <label className="form-label">কোন মাসের সঞ্চয়?</label>
-                  <select
-                    required
-                    className="form-control"
-                    value={depositForm.month}
-                    onChange={(e) => setDepositForm({ ...depositForm, month: e.target.value })}
-                  >
-                    <option value="">মাস নির্বাচন করুন...</option>
-                    {getMonthDropdownOptions(selectedMember.joiningDate).map((mOption) => (
-                      <option key={mOption} value={mOption}>
-                        {formatBanglaMonth(mOption)}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label className="form-label" style={{ marginBottom: 0 }}>কোন মাসের সঞ্চয়?</label>
+                    <button
+                      type="button"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--primary)',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        padding: 0,
+                        textDecoration: 'underline'
+                      }}
+                      onClick={() => setUseMonthPicker(!useMonthPicker)}
+                    >
+                      {useMonthPicker ? '📋 ড্রপডাউন তালিকা' : '📅 ক্যালেন্ডার মোড'}
+                    </button>
+                  </div>
+                  {useMonthPicker ? (
+                    <input
+                      type="month"
+                      required
+                      className="form-control"
+                      value={depositForm.month}
+                      onChange={(e) => setDepositForm({ ...depositForm, month: e.target.value })}
+                    />
+                  ) : (
+                    <select
+                      required
+                      className="form-control"
+                      value={depositForm.month}
+                      onChange={(e) => setDepositForm({ ...depositForm, month: e.target.value })}
+                    >
+                      <option value="">মাস নির্বাচন করুন...</option>
+                      {getMonthDropdownOptions(selectedMember.joiningDate).map((group) => (
+                        <optgroup key={group.year} label={group.label}>
+                          {group.months.map((mOption) => (
+                            <option key={mOption} value={mOption}>
+                              {formatBanglaMonth(mOption)}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -2169,6 +2331,14 @@ export default function Members() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ----------------- MODAL: MEMBER ID CARD ----------------- */}
+      {idCardMember && (
+        <MemberIdCardModal
+          member={idCardMember}
+          onClose={() => setIdCardMember(null)}
+        />
       )}
     </div>
   );

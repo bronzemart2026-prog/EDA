@@ -87,3 +87,17 @@ export const supabase = createClient(PROXY_URL, supabaseAnonKey, {
   }
 });
 
+// Isolated client with no session persistence (useful for admin creating new users without getting logged out)
+export const createIsolatedAuthClient = () => {
+  return createClient(PROXY_URL, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    },
+    global: {
+      fetch: customFetch
+    }
+  });
+};
+
