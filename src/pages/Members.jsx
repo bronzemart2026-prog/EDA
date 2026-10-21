@@ -8,7 +8,7 @@ import BottomNav from '../components/BottomNav';
 import Footer from '../components/Footer';
 import ReceiptModal from '../components/ReceiptModal';
 import Pagination from '../components/Pagination';
-import { Plus, Search, Info, PlusCircle, History, Edit, X, Save, Calendar, Download, FileText, Receipt, Trash2, AlertTriangle, Upload, Camera, Eye, Image as ImageIcon } from 'lucide-react';
+import { Plus, Search, Info, PlusCircle, History, Edit, X, Save, Calendar, Download, FileText, Receipt, Trash2, AlertTriangle, Upload, Camera, Eye, Image as ImageIcon, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { membersService } from '../utils/supabaseService';
 import { optimizeImageToTargetSize } from '../utils/imageOptimizer';
@@ -29,6 +29,7 @@ export default function Members() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
+  const [editingDeposit, setEditingDeposit] = useState(null); // Active deposit object being edited by admin
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [receiptData, setReceiptData] = useState(null); // For receipt modal
   const [idCardMember, setIdCardMember] = useState(null); // For ID Card download modal
@@ -91,6 +92,8 @@ export default function Members() {
   });
 
   const [depositForm, setDepositForm] = useState({
+    depositType: 'monthly',
+    note: '',
     amount: '',
     month: '',
     date: new Date().toISOString().split('T')[0]
@@ -115,14 +118,59 @@ export default function Members() {
     fetchMembers();
   }, []);
 
+  // Month status filter & current month reference
+  const [monthStatusFilter, setMonthStatusFilter] = useState('all'); // 'all' | 'paid' | 'due'
+  const today = new Date();
+  const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+  // Monthly collection statistics
+  const monthlyStats = useMemo(() => {
+    let paidCount = 0;
+    let dueCount = 0;
+    let totalTarget = 0;
+    let totalCollected = 0;
+
+    members.forEach((m) => {
+      totalTarget += Number(m.monthlyDepositAmount || 0);
+      totalCollected += Number(m.currentMonthPaid || 0);
+      if (m.currentMonthStatus === 'PAID') {
+        paidCount++;
+      } else {
+        dueCount++;
+      }
+    });
+
+    const percent = totalTarget > 0 ? Math.min(100, Math.round((totalCollected / totalTarget) * 100)) : 0;
+
+    return {
+      paidCount,
+      dueCount,
+      totalTarget,
+      totalCollected,
+      percent
+    };
+  }, [members]);
+
   // Filtered members list
-  const filteredMembers = members.filter(member =>
-    member.name.toLowerCase().includes(search.toLowerCase()) ||
-    member.memberId.toLowerCase().includes(search.toLowerCase()) ||
-    member.mobile.includes(search) ||
-    (member.profession && member.profession.toLowerCase().includes(search.toLowerCase())) ||
-    (member.designation && member.designation.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filteredMembers = members.filter(member => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      member.name.toLowerCase().includes(q) ||
+      member.memberId.toLowerCase().includes(q) ||
+      member.mobile.includes(search) ||
+      (member.profession && member.profession.toLowerCase().includes(q)) ||
+      (member.designation && member.designation.toLowerCase().includes(q));
+
+    if (!matchesSearch) return false;
+
+    if (monthStatusFilter === 'paid') {
+      return member.currentMonthStatus === 'PAID';
+    }
+    if (monthStatusFilter === 'due') {
+      return member.currentMonthStatus === 'DUE' || member.currentMonthStatus === 'PARTIAL';
+    }
+    return true;
+  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -130,7 +178,7 @@ export default function Members() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search]);
+  }, [search, monthStatusFilter]);
 
   const paginatedMembers = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -315,26 +363,86 @@ export default function Members() {
     }
   };
 
-  // Handle Deposit Entry Submit
+  // Handle Deposit Entry / Edit Submit
   const handleDepositSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    if (editingDeposit && !isAdmin) {
+      toast.error('শুধুমাত্র অ্যাডমিন পেমেন্ট সংশোধন করতে পারবেন');
+      return;
+    }
+
     setIsSubmitting(true);
+
+    let finalMonth = depositForm.month;
+    let headLabel = 'মাসিক সঞ্চয় জমা';
+
+    if (depositForm.depositType === 'one_time') {
+      finalMonth = 'এককালীন';
+      headLabel = 'এককালীন সঞ্চয় জমা';
+    } else if (depositForm.depositType === 'admission_fee') {
+      finalMonth = 'ভর্তি ফি';
+      headLabel = 'ভর্তি ফি / সদস্যপদ ফি';
+    } else if (depositForm.depositType === 'other_fee') {
+      const noteText = depositForm.note ? depositForm.note.trim() : '';
+      finalMonth = noteText ? `অন্যান্য ফি (${noteText})` : 'অন্যান্য ফি';
+      headLabel = noteText ? `অন্যান্য ফি - ${noteText}` : 'অন্যান্য ফি / চার্জ';
+    }
+
+    const payload = {
+      amount: depositForm.amount,
+      month: depositForm.depositType === 'monthly' ? depositForm.month : (depositForm.date ? depositForm.date.slice(0, 7) : ''),
+      depositType: depositForm.depositType || 'monthly',
+      note: depositForm.note ? depositForm.note.trim() : '',
+      date: depositForm.date
+    };
+
+    if (editingDeposit) {
+      const promise = apiRequest(`/api/members/deposit/${editingDeposit._id}`, {
+        method: 'PUT',
+        body: payload
+      });
+
+      toast.promise(promise, {
+        loading: 'জমা সংশোধন করা হচ্ছে...',
+        success: 'জমার রেকর্ড সফলভাবে সংশোধন করা হয়েছে!',
+        error: (err) => err.message || 'সংশোধন করতে ব্যর্থ হয়েছে'
+      });
+
+      try {
+        await promise;
+        setShowDepositModal(false);
+        setEditingDeposit(null);
+        fetchMembers();
+        if (selectedMember) {
+          const data = await apiRequest(`/api/members/${selectedMember._id}/history`);
+          setDepositsList(data);
+        }
+        if (activeMemberDetail && activeMemberDetail.member._id === selectedMember._id) {
+          handleViewDetails(selectedMember._id);
+        }
+      } catch (err) { } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     const promise = apiRequest(`/api/members/${selectedMember._id}/deposit`, {
       method: 'POST',
-      body: depositForm
+      body: payload
     });
 
     toast.promise(promise, {
       loading: 'জমা রেকর্ড করা হচ্ছে...',
-      success: 'সঞ্চয় সফলভাবে জমা হয়েছে!',
+      success: 'অর্থ সফলভাবে জমা রেকর্ড করা হয়েছে!',
       error: (err) => err.message || 'জমা রেকর্ড করতে ব্যর্থ হয়েছে'
     });
 
     try {
       const res = await promise;
       setShowDepositModal(false);
+      setEditingDeposit(null);
       fetchMembers();
       // If detail modal is open, refresh detail data
       if (activeMemberDetail && activeMemberDetail.member._id === selectedMember._id) {
@@ -344,13 +452,14 @@ export default function Members() {
       setReceiptData({
         id: res?._id || res?.deposit?._id || '',
         type: 'deposit',
+        depositHead: headLabel,
         memberName: selectedMember.name,
         memberId: selectedMember.memberId,
         mobile: selectedMember.mobile,
         address: selectedMember.address,
-        month: formatBanglaMonth(depositForm.month),
-        date: formatBanglaDate(depositForm.date),
-        amount: formatBDT(depositForm.amount),
+        month: depositForm.depositType === 'monthly' ? depositForm.month : finalMonth,
+        date: depositForm.date,
+        amount: depositForm.amount,
         amountRaw: depositForm.amount,
         recordedBy: user.name,
       });
@@ -384,6 +493,7 @@ export default function Members() {
   // Trigger deposit collection modal setup
   const handleOpenDepositModal = (member) => {
     setSelectedMember(member);
+    setEditingDeposit(null);
 
     // Set default amount to member's monthly rate
     // Set default month to current month YYYY-MM
@@ -391,9 +501,29 @@ export default function Members() {
     const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 
     setDepositForm({
+      depositType: 'monthly',
+      note: '',
       amount: member.monthlyDepositAmount,
       month: currentMonthStr,
       date: today.toISOString().split('T')[0]
+    });
+    setShowDepositModal(true);
+  };
+
+  // Trigger edit deposit modal setup (ADMIN ONLY)
+  const handleOpenEditDepositModal = (dep) => {
+    if (!isAdmin) {
+      toast.error('শুধুমাত্র অ্যাডমিন পেমেন্ট সংশোধন করতে পারবেন');
+      return;
+    }
+    setEditingDeposit(dep);
+    const dType = dep.depositType || (dep.month && dep.month.includes('-') ? 'monthly' : 'other_fee');
+    setDepositForm({
+      depositType: dType,
+      note: dep.note || '',
+      amount: dep.amount,
+      month: dep.month && dep.month.includes('-') ? dep.month : new Date().toISOString().slice(0, 7),
+      date: dep.date ? new Date(dep.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
     });
     setShowDepositModal(true);
   };
@@ -562,12 +692,12 @@ export default function Members() {
       <main className="content-wrapper">
 
         {/* Header Action & Search */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
-          <h3 style={{ fontSize: '1.05rem' }}>সদস্য তালিকা ({toBanglaNumber(filteredMembers.length)} জন)</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+          <h3 style={{ fontSize: '1.05rem', margin: 0 }}>সদস্য তালিকা ({toBanglaNumber(filteredMembers.length)} জন)</h3>
           {isAdmin && (
             <button
               className="btn btn-primary btn-sm"
-              style={{ width: 'auto', minHeight: '38px', gap: '4px', flexShrink: 0 }}
+              style={{ width: 'auto', minHeight: '36px', gap: '4px', flexShrink: 0 }}
               onClick={() => {
                 resetMemberForm();
                 setMemberForm(prev => ({
@@ -581,6 +711,140 @@ export default function Members() {
               <span>সদস্য যোগ করুন</span>
             </button>
           )}
+        </div>
+
+        {/* 1 & 2. Ultra-Compact Monthly Progress & Filter Tabs Bar */}
+        <div style={{
+          background: '#ffffff',
+          borderRadius: '10px',
+          border: '1px solid var(--border)',
+          padding: '8px 10px',
+          marginBottom: '10px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+          fontFamily: 'inherit'
+        }}>
+          {/* Top mini row: Month Name & Target vs Collected */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '5px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary-dark)' }}>
+              <Calendar size={13} color="var(--primary)" />
+              <span>{formatBanglaMonth(currentMonthStr)}</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                ({toBanglaNumber(monthlyStats.percent)}% আদায়)
+              </span>
+            </div>
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+              আদায়: <strong style={{ color: 'var(--primary)' }}>{formatBDT(monthlyStats.totalCollected)}</strong> / {formatBDT(monthlyStats.totalTarget)}
+            </div>
+          </div>
+
+          {/* Thin progress line */}
+          <div style={{ width: '100%', height: '4px', backgroundColor: '#e2e8f0', borderRadius: '2px', overflow: 'hidden', marginBottom: '7px' }}>
+            <div style={{ width: `${monthlyStats.percent}%`, height: '100%', backgroundColor: 'var(--primary)', borderRadius: '2px', transition: 'width 0.3s ease' }} />
+          </div>
+
+          {/* Compact Filter Tabs */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px' }}>
+            <button
+              type="button"
+              onClick={() => setMonthStatusFilter('all')}
+              style={{
+                padding: '4px 6px',
+                fontSize: '0.75rem',
+                fontFamily: 'inherit',
+                fontWeight: monthStatusFilter === 'all' ? 700 : 500,
+                borderRadius: '6px',
+                border: monthStatusFilter === 'all' ? '1px solid var(--primary-dark)' : '1px solid #cbd5e1',
+                backgroundColor: monthStatusFilter === 'all' ? 'var(--primary-dark)' : '#f8fafc',
+                color: monthStatusFilter === 'all' ? '#ffffff' : 'var(--text-main)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <span>সবাই</span>
+              <span style={{
+                fontSize: '0.68rem',
+                padding: '0 4px',
+                borderRadius: '8px',
+                backgroundColor: monthStatusFilter === 'all' ? 'rgba(255,255,255,0.22)' : '#e2e8f0',
+                color: monthStatusFilter === 'all' ? '#ffffff' : '#475569',
+                fontWeight: 600
+              }}>
+                {toBanglaNumber(members.length)}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMonthStatusFilter('paid')}
+              style={{
+                padding: '4px 6px',
+                fontSize: '0.75rem',
+                fontFamily: 'inherit',
+                fontWeight: monthStatusFilter === 'paid' ? 700 : 500,
+                borderRadius: '6px',
+                border: monthStatusFilter === 'paid' ? '1px solid #059669' : '1px solid #bbf7d0',
+                backgroundColor: monthStatusFilter === 'paid' ? '#059669' : '#f0fdf4',
+                color: monthStatusFilter === 'paid' ? '#ffffff' : '#15803d',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <CheckCircle2 size={12} />
+              <span>দিয়েছেন</span>
+              <span style={{
+                fontSize: '0.68rem',
+                padding: '0 4px',
+                borderRadius: '8px',
+                backgroundColor: monthStatusFilter === 'paid' ? 'rgba(255,255,255,0.25)' : '#dcfce7',
+                color: monthStatusFilter === 'paid' ? '#ffffff' : '#15803d',
+                fontWeight: 600
+              }}>
+                {toBanglaNumber(monthlyStats.paidCount)}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMonthStatusFilter('due')}
+              style={{
+                padding: '4px 6px',
+                fontSize: '0.75rem',
+                fontFamily: 'inherit',
+                fontWeight: monthStatusFilter === 'due' ? 700 : 500,
+                borderRadius: '6px',
+                border: monthStatusFilter === 'due' ? '1px solid #dc2626' : '1px solid #fecaca',
+                backgroundColor: monthStatusFilter === 'due' ? '#dc2626' : '#fef2f2',
+                color: monthStatusFilter === 'due' ? '#ffffff' : '#b91c1c',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <AlertCircle size={12} />
+              <span>বাকি</span>
+              <span style={{
+                fontSize: '0.68rem',
+                padding: '0 4px',
+                borderRadius: '8px',
+                backgroundColor: monthStatusFilter === 'due' ? 'rgba(255,255,255,0.25)' : '#fee2e2',
+                color: monthStatusFilter === 'due' ? '#ffffff' : '#b91c1c',
+                fontWeight: 600
+              }}>
+                {toBanglaNumber(monthlyStats.dueCount)}
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Search Input */}
@@ -754,12 +1018,65 @@ export default function Members() {
                 </span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', backgroundColor: 'var(--bg-app)', padding: '8px 10px', borderRadius: '8px', gap: '8px', flexWrap: 'wrap' }}>
-                <div style={{ fontSize: '0.8rem', minWidth: 0 }}>
-                  সঞ্চয়: <strong style={{ color: 'var(--success)' }}>{formatBDT(member.totalDeposited)}</strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', backgroundColor: 'var(--bg-app)', padding: '6px 10px', borderRadius: '8px', gap: '6px' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontFamily: 'inherit', minWidth: 0 }}>
+                  মোট সঞ্চয়: <strong style={{ color: 'var(--success)' }}>{formatBDT(member.totalDeposited)}</strong>
                 </div>
-                <div style={{ fontSize: '0.8rem', minWidth: 0 }}>
-                  বকেয়া: <strong style={member.totalDue > 0 ? { color: 'var(--danger)' } : { color: 'var(--success)' }}>{formatBDT(member.totalDue)} {member.totalDue > 0 && member.monthlyDepositAmount > 0 && `(${toBanglaNumber(Math.round(member.totalDue / member.monthlyDepositAmount))} মাস)`}</strong>
+
+                {/* 3. Ultra-Compact Current Month Status Badge */}
+                <div>
+                  {member.currentMonthStatus === 'PAID' ? (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      fontFamily: 'inherit',
+                      backgroundColor: '#dcfce7',
+                      color: '#15803d',
+                      padding: '2px 7px',
+                      borderRadius: '6px',
+                      border: '1px solid #86efac',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      <CheckCircle2 size={11} /> এই মাস: পরিশোধিত
+                    </span>
+                  ) : member.currentMonthStatus === 'PARTIAL' ? (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      fontFamily: 'inherit',
+                      backgroundColor: '#fef3c7',
+                      color: '#b45309',
+                      padding: '2px 7px',
+                      borderRadius: '6px',
+                      border: '1px solid #fde68a',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      <Clock size={11} /> এই মাস: আংশিক ({formatBDT(member.currentMonthPaid)})
+                    </span>
+                  ) : (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      fontFamily: 'inherit',
+                      backgroundColor: '#fee2e2',
+                      color: '#dc2626',
+                      padding: '2px 7px',
+                      borderRadius: '6px',
+                      border: '1px solid #fca5a5',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      <AlertCircle size={11} /> এই মাস: বাকি
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -2020,13 +2337,13 @@ export default function Members() {
           </div>
         )}
 
-        {/* ----------------- MODAL: DEPOSIT ENTRY ----------------- */}
+        {/* ----------------- MODAL: DEPOSIT ENTRY & EDIT ----------------- */}
         {showDepositModal && selectedMember && (
-          <div className="modal-overlay" onClick={() => setShowDepositModal(false)}>
+          <div className="modal-overlay" onClick={() => { setShowDepositModal(false); setEditingDeposit(null); }}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <h3>মাসিক সঞ্চয় জমা এন্ট্রি</h3>
-                <button className="modal-close" onClick={() => setShowDepositModal(false)}>
+                <h3>{editingDeposit ? 'জমা সংশোধন (এডিট)' : 'টাকা গ্রহণ / জমা এন্ট্রি'}</h3>
+                <button className="modal-close" onClick={() => { setShowDepositModal(false); setEditingDeposit(null); }}>
                   <X size={24} />
                 </button>
               </div>
@@ -2036,53 +2353,103 @@ export default function Members() {
               </div>
 
               <form onSubmit={handleDepositSubmit}>
+                {/* Deposit Head / Type Selection */}
                 <div className="form-group">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <label className="form-label" style={{ marginBottom: 0 }}>কোন মাসের সঞ্চয়?</label>
-                    <button
-                      type="button"
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'var(--primary)',
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                        padding: 0,
-                        textDecoration: 'underline'
-                      }}
-                      onClick={() => setUseMonthPicker(!useMonthPicker)}
-                    >
-                      {useMonthPicker ? '📋 ড্রপডাউন তালিকা' : '📅 ক্যালেন্ডার মোড'}
-                    </button>
-                  </div>
-                  {useMonthPicker ? (
-                    <input
-                      type="month"
-                      required
-                      className="form-control"
-                      value={depositForm.month}
-                      onChange={(e) => setDepositForm({ ...depositForm, month: e.target.value })}
-                    />
-                  ) : (
-                    <select
-                      required
-                      className="form-control"
-                      value={depositForm.month}
-                      onChange={(e) => setDepositForm({ ...depositForm, month: e.target.value })}
-                    >
-                      <option value="">মাস নির্বাচন করুন...</option>
-                      {getMonthDropdownOptions(selectedMember.joiningDate).map((group) => (
-                        <optgroup key={group.year} label={group.label}>
-                          {group.months.map((mOption) => (
-                            <option key={mOption} value={mOption}>
-                              {formatBanglaMonth(mOption)}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                  )}
+                  <label className="form-label" style={{ fontWeight: 700 }}>জমার খাত / ধরন (Deposit Head)</label>
+                  <select
+                    className="form-control"
+                    value={depositForm.depositType || 'monthly'}
+                    onChange={(e) => {
+                      const type = e.target.value;
+                      let newAmount = depositForm.amount;
+                      if (type === 'monthly') {
+                        newAmount = selectedMember.monthlyDepositAmount;
+                      }
+                      setDepositForm({ ...depositForm, depositType: type, amount: newAmount });
+                    }}
+                  >
+                    <option value="monthly">📅 মাসিক সঞ্চয় জমা (Monthly Savings)</option>
+                    <option value="one_time">💰 এককালীন সঞ্চয় জমা (One-Time Deposit)</option>
+                    <option value="admission_fee">📋 ভর্তি ফি / সদস্যপদ ফি (Admission Fee)</option>
+                    <option value="other_fee">🔖 অন্যান্য ফি / চার্জ (Other Fee / Charges)</option>
+                  </select>
                 </div>
+
+                {/* Conditional Month Selector: Only for Monthly Savings */}
+                {depositForm.depositType === 'monthly' ? (
+                  <div className="form-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <label className="form-label" style={{ marginBottom: 0 }}>কোন মাসের সঞ্চয়?</label>
+                      <button
+                        type="button"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--primary)',
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          padding: 0,
+                          textDecoration: 'underline'
+                        }}
+                        onClick={() => setUseMonthPicker(!useMonthPicker)}
+                      >
+                        {useMonthPicker ? '📋 ড্রপডাউন তালিকা' : '📅 ক্যালেন্ডার মোড'}
+                      </button>
+                    </div>
+                    {useMonthPicker ? (
+                      <input
+                        type="month"
+                        required
+                        className="form-control"
+                        value={depositForm.month}
+                        onChange={(e) => setDepositForm({ ...depositForm, month: e.target.value })}
+                      />
+                    ) : (
+                      <select
+                        required
+                        className="form-control"
+                        value={depositForm.month}
+                        onChange={(e) => setDepositForm({ ...depositForm, month: e.target.value })}
+                      >
+                        <option value="">মাস নির্বাচন করুন...</option>
+                        {getMonthDropdownOptions(selectedMember.joiningDate).map((group) => (
+                          <optgroup key={group.year} label={group.label}>
+                            {group.months.map((mOption) => (
+                              <option key={mOption} value={mOption}>
+                                {formatBanglaMonth(mOption)}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                ) : depositForm.depositType === 'other_fee' ? (
+                  <div className="form-group">
+                    <label className="form-label">ফি-এর বিবরণ / উদ্দেশ্য (Remarks/Purpose)</label>
+                    <input
+                      type="text"
+                      placeholder="যেমন: বই ফি, আইডি কার্ড ফি, লেট ফি..."
+                      className="form-control"
+                      value={depositForm.note || ''}
+                      onChange={(e) => setDepositForm({ ...depositForm, note: e.target.value })}
+                    />
+                  </div>
+                ) : (
+                  <div style={{
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    fontSize: '0.82rem',
+                    color: '#166534',
+                    marginBottom: '14px'
+                  }}>
+                    {depositForm.depositType === 'one_time'
+                      ? '💡 এটি এককালীন সঞ্চয় হিসেবে সদস্যের মোট ব্যালেন্সে সরাসরি যুক্ত হবে (নির্দিষ্ট মাসের জন্য নয়)।'
+                      : '💡 সদস্যের এককালীন ভর্তি ফি / সদস্যপদ ফি বাবদ জমা হিসেবে রেকর্ড করা হবে।'}
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label className="form-label">জমার পরিমাণ (৳)</label>
@@ -2108,8 +2475,8 @@ export default function Members() {
                 </div>
 
                 <button type="submit" className="btn btn-accent" style={{ gap: '8px' }} disabled={isSubmitting}>
-                  <PlusCircle size={18} />
-                  <span>{isSubmitting ? 'অপেক্ষা করুন...' : 'জমা নিশ্চিত করুন ও রশিদ পান'}</span>
+                  {editingDeposit ? <Save size={18} /> : <PlusCircle size={18} />}
+                  <span>{isSubmitting ? 'অপেক্ষা করুন...' : (editingDeposit ? 'সংশোধন সংরক্ষণ করুন' : 'জমা নিশ্চিত করুন ও রশিদ পান')}</span>
                 </button>
               </form>
             </div>
@@ -2140,69 +2507,128 @@ export default function Members() {
                   <table style={{ width: '100%' }}>
                     <thead>
                       <tr style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-                        <th style={{ padding: '8px' }}>মাস</th>
+                        <th style={{ padding: '8px' }}>মাস / খাত</th>
                         <th style={{ padding: '8px' }}>তারিখ</th>
                         <th style={{ padding: '8px', textAlign: 'right' }}>পরিমাণ</th>
                         <th style={{ padding: '8px', textAlign: 'center' }}>রশিদ</th>
-                        {isAdmin && <th style={{ padding: '8px', textAlign: 'center' }}>মুছুন</th>}
+                        {isAdmin && <th style={{ padding: '8px', textAlign: 'center' }}>অ্যাকশন</th>}
                       </tr>
                     </thead>
                     <tbody>
-                      {depositsList.map((dep) => (
-                        <tr key={dep._id}>
-                          <td style={{ padding: '8px' }}>{formatBanglaMonth(dep.month)}</td>
-                          <td style={{ padding: '8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {formatBanglaDate(dep.date)}
-                            {dep.recordedBy && <div style={{ fontSize: '0.65rem' }}>সংগ্রাহক: {dep.recordedBy.name}</div>}
-                          </td>
-                          <td style={{ padding: '8px', fontWeight: 'bold', textAlign: 'right', color: 'var(--success)' }}>
-                            {formatBDT(dep.amount)}
-                          </td>
-                          <td style={{ padding: '8px', textAlign: 'center' }}>
-                            <button
-                              onClick={() => setReceiptData({
-                                id: dep._id,
-                                type: 'deposit',
-                                memberName: selectedMember.name,
-                                memberId: selectedMember.memberId,
-                                mobile: selectedMember.mobile,
-                                address: selectedMember.address,
-                                month: formatBanglaMonth(dep.month),
-                                date: formatBanglaDate(dep.date),
-                                amount: formatBDT(dep.amount),
-                                amountRaw: dep.amount,
-                                recordedBy: dep.recordedBy?.name || '',
-                              })}
-                              style={{
-                                background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
-                                color: 'white', border: 'none', borderRadius: '7px',
-                                padding: '5px 8px', cursor: 'pointer', display: 'flex',
-                                alignItems: 'center', gap: '3px', fontSize: '0.72rem',
-                                fontWeight: 700, fontFamily: 'inherit',
-                                boxShadow: '0 2px 6px rgba(29, 78, 216, 0.3)',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
+                      {depositsList.map((dep) => {
+                        const dType = dep.depositType || (dep.month && dep.month.includes('-') ? 'monthly' : 'other');
+                        let headLabel = 'মাসিক সঞ্চয় জমা';
+                        let badgeText = '';
+                        let badgeBg = '';
+                        let badgeColor = '';
+
+                        if (dType === 'one_time' || dep.month === 'এককালীন') {
+                          headLabel = 'এককালীন সঞ্চয় জমা';
+                          badgeText = 'এককালীন সঞ্চয়';
+                          badgeBg = '#e0f2fe';
+                          badgeColor = '#0369a1';
+                        } else if (dType === 'admission_fee' || dep.month?.includes('ভর্তি')) {
+                          headLabel = 'ভর্তি ফি / সদস্যপদ ফি';
+                          badgeText = 'ভর্তি ফি';
+                          badgeBg = '#fef3c7';
+                          badgeColor = '#92400e';
+                        } else if (dType === 'other_fee' || dep.month?.includes('অন্যান্য') || dep.month?.includes('ফি')) {
+                          headLabel = dep.note ? `অন্যান্য ফি - ${dep.note}` : 'অন্যান্য ফি';
+                          badgeText = dep.note ? `অন্যান্য (${dep.note})` : 'অন্যান্য ফি';
+                          badgeBg = '#f3e8ff';
+                          badgeColor = '#6b21a8';
+                        }
+
+                        return (
+                          <tr key={dep._id}>
+                            <td style={{ padding: '8px' }}>
+                              {badgeText ? (
+                                <span
+                                  style={{
+                                    display: 'inline-block',
+                                    padding: '2px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                    backgroundColor: badgeBg,
+                                    color: badgeColor,
+                                  }}
+                                >
+                                  {badgeText}
+                                </span>
+                              ) : (
+                                <span>{formatBanglaMonth(dep.month)}</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              {formatBanglaDate(dep.date)}
+                              {dep.recordedBy && <div style={{ fontSize: '0.65rem' }}>সংগ্রাহক: {dep.recordedBy.name}</div>}
+                            </td>
+                            <td style={{ padding: '8px', fontWeight: 'bold', textAlign: 'right', color: 'var(--success)' }}>
+                              {formatBDT(dep.amount)}
+                            </td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>
+                              <button
+                                onClick={() => setReceiptData({
+                                  id: dep._id,
+                                  type: 'deposit',
+                                  depositHead: headLabel,
+                                  memberName: selectedMember.name,
+                                  memberId: selectedMember.memberId,
+                                  mobile: selectedMember.mobile,
+                                  address: selectedMember.address,
+                                  month: dep.month,
+                                  date: dep.date,
+                                  amount: dep.amount,
+                                  amountRaw: dep.amount,
+                                  recordedBy: dep.recordedBy?.name || '',
+                                })}
+                                style={{
+                                  background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
+                                  color: 'white', border: 'none', borderRadius: '7px',
+                                  padding: '5px 8px', cursor: 'pointer', display: 'flex',
+                                  alignItems: 'center', gap: '3px', fontSize: '0.72rem',
+                                  fontWeight: 700, fontFamily: 'inherit',
+                                  boxShadow: '0 2px 6px rgba(29, 78, 216, 0.3)',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
                               <Receipt size={12} /> রশিদ
                             </button>
                           </td>
                           {isAdmin && (
                             <td style={{ padding: '8px', textAlign: 'center' }}>
-                              <button
-                                onClick={() => openDeleteModal('deposit', dep, formatBanglaMonth(dep.month))}
-                                style={{
-                                  background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca',
-                                  borderRadius: '7px', padding: '5px 8px', cursor: 'pointer',
-                                  display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.72rem',
-                                  fontWeight: 700, fontFamily: 'inherit', whiteSpace: 'nowrap',
-                                }}
-                              >
-                                <Trash2 size={12} /> মুছুন
-                              </button>
+                              <div style={{ display: 'inline-flex', gap: '5px', justifyContent: 'center' }}>
+                                <button
+                                  onClick={() => handleOpenEditDepositModal(dep)}
+                                  style={{
+                                    background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe',
+                                    borderRadius: '7px', padding: '5px 8px', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.72rem',
+                                    fontWeight: 700, fontFamily: 'inherit', whiteSpace: 'nowrap',
+                                  }}
+                                  title="জমার তথ্য এডিট করুন"
+                                >
+                                  <Edit size={12} /> এডিট
+                                </button>
+                                <button
+                                  onClick={() => openDeleteModal('deposit', dep, formatBanglaMonth(dep.month))}
+                                  style={{
+                                    background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca',
+                                    borderRadius: '7px', padding: '5px 8px', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.72rem',
+                                    fontWeight: 700, fontFamily: 'inherit', whiteSpace: 'nowrap',
+                                  }}
+                                  title="জমার রেকর্ড মুছুন"
+                                >
+                                  <Trash2 size={12} /> মুছুন
+                                </button>
+                              </div>
                             </td>
                           )}
                         </tr>
-                      ))}
+                      );
+                    })}
                     </tbody>
                   </table>
                 </div>

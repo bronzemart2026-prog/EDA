@@ -95,13 +95,15 @@ CREATE TABLE IF NOT EXISTS public.projects (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Deposits (Savings)
+-- Deposits (Savings & Member Collections)
 CREATE TABLE IF NOT EXISTS public.deposits (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     member_id UUID NOT NULL REFERENCES public.members(id) ON DELETE CASCADE,
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
     date DATE NOT NULL DEFAULT CURRENT_DATE,
-    month TEXT NOT NULL,
+    month TEXT,
+    deposit_type TEXT DEFAULT 'monthly',
+    note TEXT,
     recorded_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT now()
 );

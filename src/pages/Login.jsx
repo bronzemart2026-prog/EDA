@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogIn } from 'lucide-react';
+import InstallAppButton from '../components/InstallAppButton';
 
 export default function Login() {
   const [identifier, setIdentifier] = useState('');
@@ -188,8 +189,35 @@ export default function Login() {
           </form>
         </div>
 
+        {/* Install Mobile App Banner */}
+        <div style={{ marginTop: '16px' }}>
+          <InstallAppButton variant="banner" />
+        </div>
+
         {/* Footer */}
         <div className="login-footer" style={{ marginTop: '28px', textAlign: 'center', fontSize: '0.85rem' }}>
+          <div style={{ marginBottom: '8px' }}>
+            <a
+              href="https://edass.netlify.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: '#ffffff',
+                textDecoration: 'none',
+                fontWeight: '700',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontSize: '0.78rem',
+                backgroundColor: 'rgba(255,255,255,0.14)',
+                padding: '4px 12px',
+                borderRadius: '14px',
+                border: '1px solid rgba(255,255,255,0.25)'
+              }}
+            >
+              🌐 অফিসিয়াল ওয়েবসাইট: edass.netlify.app ↗
+            </a>
+          </div>
           <div style={{ color: 'rgba(255,255,255,0.75)', marginBottom: '8px' }}>
             © {new Date().getFullYear()} Entrepreneur Development Association (EDA)
           </div>

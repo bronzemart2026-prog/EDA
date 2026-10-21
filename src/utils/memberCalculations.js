@@ -56,15 +56,42 @@ export const calculateMemberMetrics = (member, deposits = []) => {
   );
   const totalDeposited = memberDeposits.reduce((sum, dep) => sum + Number(dep.amount || 0), 0);
   const monthsElapsed = calculateMonthsElapsed(member.joining_date || member.joiningDate);
-  const expectedDeposits = monthsElapsed * Number(member.monthly_deposit_amount || member.monthlyDepositAmount || 0);
+  const monthlyRate = Number(member.monthly_deposit_amount || member.monthlyDepositAmount || 0);
+  const expectedDeposits = monthsElapsed * monthlyRate;
   const totalDue = Math.max(0, expectedDeposits - totalDeposited);
   const currentBalance = totalDeposited;
+
+  // Current active month calculation
+  const today = new Date();
+  const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+  const currentMonthDeposits = memberDeposits.filter((dep) => {
+    if (dep.month === currentMonthStr) return true;
+    if (!dep.month && dep.date && String(dep.date).startsWith(currentMonthStr)) return true;
+    return false;
+  });
+
+  const currentMonthPaid = currentMonthDeposits.reduce((sum, dep) => sum + Number(dep.amount || 0), 0);
+  const currentMonthDue = Math.max(0, monthlyRate - currentMonthPaid);
+
+  let currentMonthStatus = 'DUE';
+  if (monthlyRate === 0) {
+    currentMonthStatus = 'PAID';
+  } else if (currentMonthPaid >= monthlyRate) {
+    currentMonthStatus = 'PAID';
+  } else if (currentMonthPaid > 0) {
+    currentMonthStatus = 'PARTIAL';
+  }
 
   return {
     totalDeposited,
     expectedDeposits,
     totalDue,
     currentBalance,
-    monthsElapsed
+    monthsElapsed,
+    currentMonthStr,
+    currentMonthPaid,
+    currentMonthDue,
+    currentMonthStatus
   };
 };

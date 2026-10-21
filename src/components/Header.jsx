@@ -1,11 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut } from 'lucide-react';
+import { ArrowLeft, LogOut, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Header({ title, showBack = false, onBack }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [imgErr, setImgErr] = React.useState(false);
+
+  const userPhoto = user?.photoUrl || user?.photo_url || user?.avatar_url || user?.memberId?.photoUrl || user?.memberId?.photo_url;
 
   const handleLogout = () => {
     if (window.confirm('আপনি কি নিশ্চিতভাবে লগআউট করতে চান?')) {
@@ -22,8 +25,17 @@ export default function Header({ title, showBack = false, onBack }) {
         </button>
       ) : user ? (
         <div className="header-user-profile" onClick={() => navigate('/profile')}>
-          <div className="header-avatar">
-            {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+          <div className="header-avatar" style={{ overflow: 'hidden' }}>
+            {userPhoto && !imgErr ? (
+              <img
+                src={userPhoto}
+                alt={user.name}
+                onError={() => setImgErr(true)}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              user.name ? user.name.charAt(0).toUpperCase() : 'U'
+            )}
           </div>
           <span className="header-username">{user.name}</span>
         </div>
@@ -39,45 +51,74 @@ export default function Header({ title, showBack = false, onBack }) {
         </h1>
       </div>
 
-      {user ? (
-        <button
-          onClick={handleLogout}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <a
+          href="https://edass.netlify.app"
+          target="_blank"
+          rel="noopener noreferrer"
           style={{
-            background: 'rgba(239, 68, 68, 0.12)',
-            border: '1px solid rgba(239, 68, 68, 0.25)',
-            color: '#fca5a5',
-            fontSize: '0.8rem',
+            background: 'rgba(255, 255, 255, 0.16)',
+            border: '1px solid rgba(255, 255, 255, 0.28)',
+            color: '#ffffff',
+            fontSize: '0.75rem',
             fontWeight: 700,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            padding: '5px 10px',
+            padding: '5px 8px',
             borderRadius: '16px',
+            textDecoration: 'none',
             flexShrink: 0,
             transition: 'all 0.2s ease',
-            textShadow: '0 1px 2px rgba(0, 0, 0, 0.15)',
-            boxShadow: '0 2px 8px rgba(220, 38, 38, 0.1)',
             fontFamily: 'inherit'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.22)';
-            e.currentTarget.style.color = '#ffffff';
-            e.currentTarget.style.transform = 'scale(1.03)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
-            e.currentTarget.style.color = '#fca5a5';
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-          title="লগআউট"
+          title="অফিসিয়াল ওয়েবসাইট খুলুন (edass.netlify.app)"
         >
-          <LogOut size={14} style={{ color: 'inherit' }} />
-          <span style={{ color: 'inherit' }}>লগআউট</span>
-        </button>
-      ) : (
-        <div style={{ width: '48px' }}></div>
-      )}
+          <Globe size={13} color="#ffffff" />
+          <span style={{ fontSize: '0.72rem' }}>ওয়েব</span>
+        </a>
+
+        {user ? (
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              color: '#fca5a5',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '5px 10px',
+              borderRadius: '16px',
+              flexShrink: 0,
+              transition: 'all 0.2s ease',
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.15)',
+              boxShadow: '0 2px 8px rgba(220, 38, 38, 0.1)',
+              fontFamily: 'inherit'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.22)';
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.transform = 'scale(1.03)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
+              e.currentTarget.style.color = '#fca5a5';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            title="লগআউট"
+          >
+            <LogOut size={14} style={{ color: 'inherit' }} />
+            <span style={{ color: 'inherit' }}>লগআউট</span>
+          </button>
+        ) : (
+          <div style={{ width: '48px' }}></div>
+        )}
+      </div>
     </header>
   );
 }

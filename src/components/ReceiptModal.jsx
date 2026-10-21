@@ -29,7 +29,14 @@ export default function ReceiptModal({ receipt, onClose }) {
   });
 
   // Transaction Date
-  const transactionDateFormatted = receipt.date ? formatBanglaDate(receipt.date) : printDateStr;
+  let transactionDateFormatted = printDateStr;
+  if (receipt.date) {
+    if (typeof receipt.date === 'string' && /[ঁ-৯]/.test(receipt.date)) {
+      transactionDateFormatted = receipt.date;
+    } else {
+      transactionDateFormatted = formatBanglaDate(receipt.date) || printDateStr;
+    }
+  }
 
   // Month Formatted
   const formattedMonth = receipt.month && receipt.month.includes('-')
@@ -37,7 +44,25 @@ export default function ReceiptModal({ receipt, onClose }) {
     : (receipt.month || '');
 
   // Amount
-  const rawAmount = Number(receipt.amountRaw || receipt.amount || 0);
+  let rawAmount = Number(receipt.amountRaw);
+  if (isNaN(rawAmount) || rawAmount === 0) {
+    if (typeof receipt.amount === 'number') {
+      rawAmount = receipt.amount;
+    } else if (typeof receipt.amount === 'string') {
+      const bengaliToEnglish = {
+        '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
+        '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9'
+      };
+      const cleaned = receipt.amount
+        .split('')
+        .map(c => bengaliToEnglish[c] !== undefined ? bengaliToEnglish[c] : c)
+        .join('')
+        .replace(/[^0-9.]/g, '');
+      rawAmount = Number(cleaned) || 0;
+    } else {
+      rawAmount = 0;
+    }
+  }
   const banglaAmountFormatted = toBanglaNumber(rawAmount.toLocaleString('en-US'));
   const banglaAmountWords = numberToBanglaWords(rawAmount);
 
@@ -66,8 +91,8 @@ export default function ReceiptModal({ receipt, onClose }) {
         ? `👤 *সদস্যের নাম:* ${receipt.memberName}\n🆔 *সদস্য আইডি:* ${receipt.memberId}\n📱 *মোবাইল:* ${receipt.mobile || 'প্রযোজ্য নয়'}`
         : `🚗 *প্রজেক্ট:* ${receipt.projectName}\n👷 *চালক:* ${receipt.driverName}\n📱 *মোবাইল:* ${receipt.driverMobile || 'প্রযোজ্য নয়'}`,
       ``,
-      `📌 *খাত / বিবরণ:* ${isDeposit ? 'মাসিক সঞ্চয় জমা' : 'প্রজেক্ট মাসিক কিস্তি আদায়'}`,
-      formattedMonth ? `📅 *সংশ্লিষ্ট মাস:* ${formattedMonth}` : null,
+      `📌 *খাত / বিবরণ:* ${receipt.depositHead || (isDeposit ? 'মাসিক সঞ্চয় জমা' : 'প্রজেক্ট মাসিক কিস্তি আদায়')}`,
+      formattedMonth && formattedMonth.includes('-') ? `📅 *সংশ্লিষ্ট মাস:* ${formattedMonth}` : null,
       `💰 *জমাকৃত পরিমাণ:* ৳ ${banglaAmountFormatted}`,
       `✍️ *কথায়:* ${banglaAmountWords}`,
       `✅ *স্ট্যাটাস:* সফলভাবে গ্রহণ ও সংরক্ষিত হয়েছে (PAID)`,
@@ -417,16 +442,16 @@ export default function ReceiptModal({ receipt, onClose }) {
                           জমার খাত / বিবরণ (Deposit Head)
                         </td>
                         <td style={{ padding: '7px 12px', color: '#064e3b', fontWeight: 700 }}>
-                          মাসিক সঞ্চয় জমা (Monthly Savings)
+                          {receipt.depositHead || 'মাসিক সঞ্চয় জমা (Monthly Savings)'}
                         </td>
                       </tr>
                       {formattedMonth && (
                         <tr>
                           <td style={{ padding: '7px 12px', color: '#475569', fontWeight: 700, backgroundColor: '#fbfcfd' }}>
-                            সংশ্লিষ্ট মাস (For the Month)
+                            {formattedMonth.includes('-') ? 'সংশ্লিষ্ট মাস (For the Month)' : 'খাত / নোট (Head Details)'}
                           </td>
                           <td style={{ padding: '7px 12px', color: '#047857', fontWeight: 800 }}>
-                            {formattedMonth}
+                            {formattedMonth.includes('-') ? formatBanglaMonth(formattedMonth) : formattedMonth}
                           </td>
                         </tr>
                       )}

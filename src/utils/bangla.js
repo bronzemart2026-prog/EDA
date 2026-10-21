@@ -21,8 +21,10 @@ const banglaMonthsShort = {
  * @returns {string}
  */
 export const toBanglaNumber = (num) => {
-  if (num === null || num === undefined) return '০';
-  return String(num)
+  if (num === null || num === undefined || (typeof num === 'number' && isNaN(num))) return '০';
+  const str = String(num);
+  if (str === 'NaN' || str === 'undefined' || str === 'null') return '০';
+  return str
     .split('')
     .map(char => englishToBanglaNumerals[char] || char)
     .join('');
@@ -34,24 +36,53 @@ export const toBanglaNumber = (num) => {
  * @returns {string}
  */
 export const formatBanglaMonth = (monthStr) => {
-  if (!monthStr || !monthStr.includes('-')) return monthStr;
+  if (!monthStr) return '';
+  if (typeof monthStr === 'string' && /[ঁ-৯]/.test(monthStr) && !monthStr.includes('-')) {
+    return monthStr;
+  }
+  if (!monthStr.includes('-')) return monthStr;
   const [year, month] = monthStr.split('-');
   return `${banglaMonths[month] || month} ${toBanglaNumber(year)}`;
 };
 
 /**
  * Formats Date object or timestamp into standard Bangla date DD-MM-YYYY.
+ * Idempotent: If already formatted in Bengali, returns the string directly.
  * @param {string|Date} dateInput 
  * @returns {string}
  */
 export const formatBanglaDate = (dateInput) => {
   if (!dateInput) return '';
-  const date = new Date(dateInput);
-  const day = String(date.getDate());
+
+  // If already formatted in Bengali, return as is
+  if (typeof dateInput === 'string' && /[ঁ-৯]/.test(dateInput)) {
+    return dateInput;
+  }
+
+  let date;
+  if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput.trim())) {
+    const [y, m, d] = dateInput.trim().split('-').map(Number);
+    date = new Date(y, m - 1, d);
+  } else {
+    date = new Date(dateInput);
+  }
+
+  if (isNaN(date.getTime())) {
+    return typeof dateInput === 'string' ? dateInput : '';
+  }
+
+  const day = date.getDate();
   const month = String(date.getMonth() + 1);
   const year = date.getFullYear();
-  
-  return `${toBanglaNumber(day)}ই ${banglaMonthsShort[month]} ${toBanglaNumber(year)}`;
+
+  let suffix = 'ই';
+  if (day === 1) suffix = 'লা';
+  else if (day === 2 || day === 3) suffix = 'রা';
+  else if (day === 4) suffix = 'ঠা';
+  else if (day >= 19) suffix = 'শে';
+
+  const monthName = banglaMonthsShort[month] || '';
+  return `${toBanglaNumber(day)}${suffix} ${monthName} ${toBanglaNumber(year)}`.trim();
 };
 
 /**

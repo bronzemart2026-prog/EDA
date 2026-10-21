@@ -7,7 +7,7 @@ import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 import Footer from '../components/Footer';
 import { Printer, Info, X, Download, FileText, Award, LayoutDashboard, PiggyBank, AlertTriangle, TrendingUp, HandCoins, Receipt, Users } from 'lucide-react';
-import { exportToExcel, exportToPDF } from '../utils/exportUtils';
+import { exportToExcel, exportToPDF, exportOverallSummaryPDF } from '../utils/exportUtils';
 
 export default function Reports() {
   const { user } = useAuth();
@@ -154,6 +154,31 @@ export default function Reports() {
 
   const handleExportExcel = () => {
     if (activeTab === 0 || activeTab === 1) {
+      if (activeTab === 0 && summaryData) {
+        const currentBalance = (summaryData.totalDeposits || 0) + (summaryData.totalInstallmentsCollected || 0) - (summaryData.totalInvestments || 0) - (summaryData.totalExpenses || 0);
+        const cols = [
+          { header: 'বিভাগ', key: 'category' },
+          { header: 'বিবরণ', key: 'label' },
+          { header: 'পরিমাণ', key: 'value' },
+        ];
+        const dataToExport = [
+          { category: 'আয়', label: 'মোট সঞ্চয় জমা (সদস্যদের কাছ থেকে)', value: formatBDT(summaryData.totalDeposits) },
+          { category: 'আয়', label: 'মোট কিস্তি আদায় (প্রজেক্ট থেকে)', value: formatBDT(summaryData.totalInstallmentsCollected) },
+          { category: 'মোট আয়', label: 'সমস্ত উৎস থেকে মোট প্রাপ্তি', value: formatBDT((summaryData.totalDeposits || 0) + (summaryData.totalInstallmentsCollected || 0)) },
+          { category: 'বিনিয়োগ', label: 'মোট প্রজেক্টে বিনিয়োগ', value: `- ${formatBDT(summaryData.totalInvestments)}` },
+          { category: 'ব্যয়', label: 'মোট খরচ / ব্যয়', value: `- ${formatBDT(summaryData.totalExpenses || 0)}` },
+          { category: 'নিট ব্যালেন্স', label: 'বর্তমান তহবিল ব্যালেন্স', value: formatBDT(currentBalance) },
+          { category: 'বকেয়া', label: 'সদস্য সঞ্চয় বকেয়া', value: formatBDT(summaryData.memberDueAmount) },
+          { category: 'বকেয়া', label: 'প্রজেক্ট কিস্তি বকেয়া', value: formatBDT(summaryData.projectDueAmount) },
+          { category: 'মোট বকেয়া', label: 'সর্বমোট আদায়যোগ্য বকেয়া', value: formatBDT(summaryData.totalDueAmount) },
+          { category: 'মুনাফা', label: 'প্রজেক্ট থেকে টার্গেটকৃত মোট মুনাফা', value: formatBDT(summaryData.totalProfit) },
+          { category: 'মুনাফা', label: 'এ পর্যন্ত আদায়কৃত মোট মুনাফা', value: formatBDT(summaryData.totalRealizedProfit || 0) },
+          { category: 'পরিসংখ্যান', label: 'মোট সদস্য সংখ্যা', value: toBanglaNumber(summaryData.totalMembers) + ' জন' },
+          { category: 'পরিসংখ্যান', label: 'সক্রিয় প্রজেক্ট সংখ্যা', value: toBanglaNumber(summaryData.activeProjects) + ' টি' },
+        ];
+        exportToExcel(dataToExport, cols, 'Samiti_Overall_Report', 'সার্বিক রিপোর্ট');
+        return;
+      }
       // For summary tabs export the member list table
       if (activeTab === 1 && memberSummaryData) {
         const cols = [
@@ -321,28 +346,9 @@ export default function Reports() {
   // ─── PDF Export ───────────────────────────────────────────────────────────
   const handleExportPDF = () => {
     if (activeTab === 0) {
-      // Export overall summary as PDF
+      // Export dedicated overall summary as PDF
       if (!summaryData) return;
-      const currentBalance = (summaryData.totalDeposits || 0) + (summaryData.totalInstallmentsCollected || 0) - (summaryData.totalInvestments || 0) - (summaryData.totalExpenses || 0);
-      const cols = [
-        { header: 'বিবরণ', key: 'label' },
-        { header: 'পরিমাণ / সংখ্যা', key: 'value' },
-      ];
-      const dataToExport = [
-        { label: 'মোট সদস্য', value: toBanglaNumber(summaryData.totalMembers) + ' জন' },
-        { label: 'মোট সঞ্চয় জমা', value: formatBDT(summaryData.totalDeposits) },
-        { label: 'মোট কিস্তি আদায়', value: formatBDT(summaryData.totalInstallmentsCollected) },
-        { label: 'মোট বিনিয়োগ', value: formatBDT(summaryData.totalInvestments) },
-        { label: 'মোট খরচ', value: formatBDT(summaryData.totalExpenses) },
-        { label: 'বর্তমান তহবিল ব্যালেন্স', value: formatBDT(currentBalance) },
-        { label: 'সদস্য সঞ্চয় বকেয়া', value: formatBDT(summaryData.memberDueAmount) },
-        { label: 'প্রজেক্ট কিস্তি বকেয়া', value: formatBDT(summaryData.projectDueAmount) },
-        { label: 'সর্বমোট বকেয়া', value: formatBDT(summaryData.totalDueAmount) },
-        { label: 'টার্গেটকৃত মোট মুনাফা', value: formatBDT(summaryData.totalProfit) },
-        { label: 'আদায়কৃত মোট মুনাফা', value: formatBDT(summaryData.totalRealizedProfit || 0) },
-        { label: 'সক্রিয় প্রজেক্ট', value: toBanglaNumber(summaryData.activeProjects) + ' টি' },
-      ];
-      exportToPDF(dataToExport, cols, 'সমিতি সার্বিক রিপোর্ট', 'Samiti_Overall_Report');
+      exportOverallSummaryPDF(summaryData);
       return;
     }
 
@@ -814,8 +820,12 @@ return (
                   </div>
                 </div>
 
-                {/* Export PDF button for summary */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', gap: '8px' }}>
+                {/* Export buttons for summary */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', gap: '8px', flexWrap: 'wrap' }}>
+                  <button className="btn btn-outline btn-sm" style={{ width: 'auto', padding: '8px 14px', color: 'var(--success)', background: 'white' }} onClick={handleExportExcel}>
+                    <FileText size={14} color="#16a34a" />
+                    <span>Excel ডাউনলোড</span>
+                  </button>
                   <button className="btn btn-outline btn-sm" style={{ width: 'auto', padding: '8px 14px', color: 'var(--danger)', background: 'white' }} onClick={handleExportPDF}>
                     <Download size={14} color="#dc2626" />
                     <span>PDF ডাউনলোড</span>

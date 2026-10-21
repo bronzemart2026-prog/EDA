@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EDA - পূর্ণাঙ্গ সিস্টেম ফিচার ম্যানুয়াল ও ইউজার গাইড</title>
+  <link rel="icon" type="image/png" href="public/main_logo.png" />
+  <!-- Google Fonts: Hind Siliguri for Bengali & Inter for modern UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* EDA Brand Colors (Based on Official Logo) */
+      --primary: #059669;
+      --primary-dark: #064e3b;
+      --primary-light: #10b981;
+      --primary-soft: #ecfdf5;
+      
+      --secondary: #0284c7;
+      --secondary-dark: #0369a1;
+      --secondary-light: #38bdf8;
+      --secondary-soft: #f0f9ff;
+      
+      --accent: #f59e0b;
+      --accent-dark: #d97706;
+      --accent-light: #fbbf24;
+      --accent-soft: #fffbeb;
+      
+      --whatsapp: #25D366;
+      --whatsapp-dark: #128C7E;
+      
+      --danger: #ef4444;
+      --danger-soft: #fef2f2;
+      
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --border-dark: #cbd5e1;
+      
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-light: #64748b;
+      
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 14px rgba(5, 150, 105, 0.08);
+      --shadow-lg: 0 12px 28px rgba(6, 78, 59, 0.12);
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'Hind Siliguri', 'Kalpurush', 'SolaimanLipi', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    /* Top Sticky Navigation Bar */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--primary-dark);
+    }
+
+    .nav-brand img {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      object-fit: contain;
+      border: 1.5px solid var(--primary-light);
+      background: #fff;
+      padding: 2px;
+    }
+
+    .nav-brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .nav-brand-text p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+      background: var(--bg-body);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-whatsapp {
+      background: #25D366;
+      color: white;
+      box-shadow: 0 2px 8px rgba(37, 211, 102, 0.25);
+    }
+
+    .btn-whatsapp:hover {
+      background: #1eb956;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #0284c7 100%);
+      border-radius: var(--radius-lg);
+      padding: 40px 36px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      right: -60px;
+      bottom: -60px;
+      width: 240px;
+      height: 240px;
+      background: radial-gradient(circle, rgba(251, 191, 36, 0.2) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      max-width: 650px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .hero-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: rgba(255, 255, 255, 0.92);
+      margin-bottom: 20px;
+      line-height: 1.55;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .hero-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hero-logo-box {
+      background: white;
+      padding: 16px;
+      border-radius: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      flex-shrink: 0;
+      text-align: center;
+    }
+
+    .hero-logo-box img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .hero-logo-box span {
+      display: block;
+      margin-top: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .toc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .toc-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px 20px;
+    }
+
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .toc-item:hover {
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+      border-left-color: var(--primary);
+      transform: translateX(4px);
+    }
+
+    .toc-badge {
+      background: var(--border);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    /* Section Headers */
+    .section {
+      margin-bottom: 40px;
+      scroll-margin-top: 80px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .section-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary-soft), #d1fae5);
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      border: 1px solid rgba(5, 150, 105, 0.2);
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      line-height: 1.3;
+    }
+
+    .section-tagline {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Cards & Grids */
+    .feature-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .feature-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: rgba(5, 150, 105, 0.3);
+    }
+
+    .card-highlight {
+      border-left: 4px solid var(--primary);
+    }
+
+    .card-whatsapp {
+      border-left: 4px solid var(--whatsapp);
+      background: linear-gradient(to right, #f0fdf4 0%, #ffffff 100%);
+    }
+
+    .card-accent {
+      border-left: 4px solid var(--accent);
+      background: linear-gradient(to right, #fffbeb 0%, #ffffff 100%);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    /* Feature List & Badges */
+    .feature-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .bullet {
+      color: var(--primary);
+      font-size: 1.1rem;
+      line-height: 1.4;
+      flex-shrink: 0;
+    }
+
+    .kpi-box {
+      background: var(--bg-body);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .kpi-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .kpi-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      font-family: 'Hind Siliguri', sans-serif;
+    }
+
+    /* WhatsApp Due Message Box Showcase */
+    .whatsapp-preview-box {
+      background: #efeae2;
+      border: 1px solid #d1d7db;
+      border-radius: 14px;
+      padding: 18px;
+      margin: 16px 0;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.04);
+      position: relative;
+    }
+
+    .whatsapp-header-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--whatsapp-dark);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 8px 8px 0 0;
+      margin: -18px -18px 14px -18px;
+    }
+
+    .whatsapp-header-bar img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .whatsapp-bubble {
+      background: #ffffff;
+      border-radius: 10px 10px 10px 0;
+      padding: 14px 16px;
+      color: #111b21;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      position: relative;
+      max-width: 92%;
+    }
+
+    .whatsapp-bubble strong {
+      color: #064e3b;
+    }
+
+    .whatsapp-time {
+      display: block;
+      text-align: right;
+      font-size: 0.7rem;
+      color: #667781;
+      margin-top: 6px;
+    }
+
+    /* Code & Script Box */
+    .code-box {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      overflow-x: auto;
+      margin: 12px 0;
+      border: 1px solid #334155;
+    }
+
+    /* Step by Step */
+    .step-list {
+      counter-reset: step-counter;
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .step-list li {
+      position: relative;
+      padding-left: 44px;
+      margin-bottom: 20px;
+    }
+
+    .step-list li::before {
+      counter-increment: step-counter;
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 30px;
+      height: 30px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+    }
+
+    /* Table Styles */
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.88rem;
+    }
+
+    .custom-table th, .custom-table td {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .custom-table th {
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .custom-table tr:nth-child(even) {
+      background-color: #fbfcfe;
+    }
+
+    /* Tag styles */
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .tag-green { background: #dcfce7; color: #15803d; }
+    .tag-blue { background: #e0f2fe; color: #0369a1; }
+    .tag-amber { background: #fef3c7; color: #b45309; }
+    .tag-red { background: #fee2e2; color: #b91c1c; }
+
+    /* Footer / Developer Rights */
+    .developer-footer {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #94a3b8;
+      border-radius: var(--radius-lg);
+      padding: 40px 32px;
+      margin-top: 60px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .developer-footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+    }
+
+    .dev-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .dev-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .hero-banner {
+        flex-direction: column-reverse;
+        text-align: center;
+        padding: 30px 20px;
+      }
+      .hero-meta {
+        justify-content: center;
+      }
+      .hero-logo-box {
+        margin: 0 auto;
+      }
+    }
+
+    .dev-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 6px;
+    }
+
+    .dev-rights {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .dev-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 14px;
+      border-radius: 20px;
+      color: #38bdf8;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    /* Comparison & Problem Solver Cards */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    @media (max-width: 680px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .compare-col {
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .compare-bad {
+      background: #fef2f2;
+      border: 1.5px solid #fecaca;
+      border-top: 4px solid #ef4444;
+    }
+
+    .compare-bad h4 {
+      color: #991b1b;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .compare-good {
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      border-top: 4px solid var(--primary);
+    }
+
+    .compare-good h4 {
+      color: var(--primary-dark);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .benefit-highlight-box {
+      background: linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(2, 132, 199, 0.08) 100%);
+      border-left: 4px solid var(--primary);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 14px 0;
+    }
+
+    /* Print Header (Visible only when printed / saved as PDF) */
+    .print-running-header {
+      display: none;
+    }
+
+    /* Print & Multi-Page PDF Formatting (Magazine Quality) */
+    /* Page & Print Setup */
+    @page {
+      size: A4 portrait;
+      margin: 12mm 10mm 12mm 10mm;
+    }
+
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+        text-rendering: optimizeLegibility !important;
+      }
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 9.2pt !important;
+        line-height: 1.5 !important;
+        font-family: 'Hind Siliguri', 'Kalpurush', 'SolaimanLipi', 'Noto Sans Bengali', Arial, sans-serif !important;
+      }
+      .top-nav, .no-print, button.btn {
+        display: none !important;
+      }
+      .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      /* Running Print Header */
+      .print-running-header {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2.5px solid var(--primary);
+        padding-bottom: 6px;
+        margin-bottom: 14px;
+      }
+      .print-running-header .print-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .print-running-header img {
+        width: 26px;
+        height: 26px;
+        object-fit: contain;
+      }
+      .print-running-header span {
+        font-size: 8.5pt;
+        font-weight: 700;
+        color: var(--primary-dark);
+      }
+      .print-running-header .print-doc-tag {
+        font-size: 8pt;
+        color: #0369a1;
+        font-weight: 700;
+        background: #e0f2fe;
+        border: 1px solid #bae6fd;
+        padding: 3px 10px;
+        border-radius: 6px;
+      }
+
+      /* Hero Banner in PDF */
+      .hero-banner {
+        background: linear-gradient(135deg, #064e3b 0%, #047857 55%, #0284c7 100%) !important;
+        color: white !important;
+        padding: 20px !important;
+        margin-bottom: 16px !important;
+        border-radius: 12px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .hero-banner * {
+        color: white !important;
+      }
+      .hero-title {
+        font-size: 1.5rem !important;
+        margin-bottom: 6px !important;
+      }
+      .hero-subtitle {
+        font-size: 0.92rem !important;
+        margin-bottom: 8px !important;
+      }
+      .hero-logo-box {
+        padding: 10px !important;
+        border-radius: 14px !important;
+      }
+      .hero-logo-box img {
+        width: 76px !important;
+        height: 76px !important;
+      }
+      .hero-logo-box span {
+        color: var(--primary-dark) !important;
+        font-size: 0.75rem !important;
+      }
+
+      /* Sections & Natural Breaks */
+      .section {
+        margin-bottom: 18px !important;
+        break-inside: auto !important;
+        page-break-inside: auto !important;
+      }
+      .section-header {
+        margin-bottom: 8px !important;
+        padding-bottom: 4px !important;
+        border-bottom: 2px solid var(--primary) !important;
+        break-after: avoid !important;
+        page-break-after: avoid !important;
+      }
+      .section-title {
+        font-size: 1.12rem !important;
+        color: var(--primary-dark) !important;
+      }
+      .section-icon {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 0.95rem !important;
+      }
+
+      /* Strict Page Break Prevention on all cards and containers */
+      .feature-card,
+      .toc-card,
+      .kpi-box,
+      .whatsapp-preview-box,
+      .compare-col,
+      .compare-card,
+      .comparison-grid,
+      .benefit-highlight-box,
+      .custom-table,
+      .custom-table tr,
+      .developer-footer {
+        box-shadow: none !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      .feature-card {
+        border: 1px solid #cbd5e1 !important;
+        border-left: 4.5px solid var(--primary) !important;
+        padding: 12px 14px !important;
+        margin-bottom: 12px !important;
+        border-radius: 8px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .card-whatsapp {
+        border-left: 4.5px solid var(--whatsapp) !important;
+        background: #f0fdf4 !important;
+      }
+      .card-accent {
+        border-left: 4.5px solid var(--accent) !important;
+        background: #fffdf5 !important;
+      }
+
+      /* Multi-column grids must stay horizontal in print */
+      .grid-2 {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .grid-2 > div {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      .grid-3 {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr !important;
+        gap: 8px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .grid-3 > div {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      .comparison-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      .toc-card {
+        padding: 14px !important;
+        margin-bottom: 14px !important;
+      }
+      .toc-grid {
+        gap: 4px 12px !important;
+      }
+      .toc-item {
+        padding: 3px 6px !important;
+        font-size: 7.8pt !important;
+      }
+
+      /* Footer in PDF */
+      .developer-footer {
+        background: #0f172a !important;
+        color: white !important;
+        padding: 16px 18px !important;
+        margin-top: 18px !important;
+        border-radius: 10px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .developer-footer * {
+        color: white !important;
+      }
+      .developer-footer .dev-badge {
+        color: #38bdf8 !important;
+        background: rgba(255, 255, 255, 0.12) !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="top-nav">
+    <a href="#" class="nav-brand">
+      <img src="public/main_logo.png" onerror="this.src='main_logo.png'" alt="EDA Logo">
+      <div class="nav-brand-text">
+        <h1>EDA Somiti & Investment System</h1>
+        <p>উদ্যোক্তা উন্নয়ন সমবায় ও বিনিয়োগ সমিতি লিমিটেড</p>
+      </div>
+    </a>
+    <div class="nav-actions">
+      <button class="btn btn-outline no-print" onclick="window.print()">
+        🖨️ প্রিন্ট / PDF সংরক্ষণ
+      </button>
+      <a href="https://wa.me/8801825334505" target="_blank" class="btn btn-whatsapp no-print">
+        💬 ডেভেলপার হেল্পলাইন
+      </a>
+    </div>
+  </nav>
+
+  <div class="container">
+    
+    <!-- Running Print Header (Only visible when printing / saving as PDF) -->
+    <div class="print-running-header">
+      <div class="print-brand">
+        <img src="public/main_logo.png" onerror="this.src='main_logo.png'" alt="EDA Logo">
+        <span>EDA সমবায় ও বহুমুখী বিনিয়োগ সমিতি সিস্টেম</span>
+      </div>
+      <div class="print-doc-tag">📞 ডেভেলপার হেল্পলাইন: 01825334505 (মো. আরিফ উদ্দিন)</div>
+    </div>
+    
+    <!-- Hero Banner with Logo & Branding -->
+    <header class="hero-banner">
+      <div class="hero-content">
+        <span class="badge-pill">💎 অফিশিয়াল ক্লায়েন্ট ফিচার ম্যানুয়াল ২০২৬</span>
+        <h1 class="hero-title">EDA সমবায় ও বহুমুখী বিনিয়োগ সমিতি ম্যানেজমেন্ট সিস্টেম</h1>
+        <p class="hero-subtitle">
+          সদস্য ব্যবস্থাপনা, স্মার্ট আইডি কার্ড, সঞ্চয় ও কিস্তি হিসাব, ডিজিটাল রসিদ এবং স্বয়ংক্রিয় হোয়াটসঅ্যাপ/এসএমএস বকেয়া তাগাদা বিশিষ্ট সর্বাধুনিক ক্লাউড সফটওয়্যার।
+        </p>
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.25); padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; color: #f8fafc; margin-top: 10px;">
+          <span>👨‍💻 সফটওয়্যার প্রস্তুতকারক: <strong>মো. আরিফ উদ্দিন</strong></span>
+          <span style="opacity: 0.5;">|</span>
+          <span>📞 ফোন / WhatsApp: <strong style="color: #fde047;">01825334505</strong></span>
+        </div>
+      </div>
+      <div class="hero-logo-box">
+        <img src="public/main_logo.png" onerror="this.src='main_logo.png'" alt="EDA Logo">
+        <span>EDA OFFICIAL</span>
+      </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <section class="toc-card">
+      <div class="toc-header">
+        <h2 class="toc-title">📑 সূচিপত্র (Table of Contents)</h2>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">দ্রুত নেভিগেশনের জন্য যেকোনো মডিউলে ক্লিক করুন</span>
+      </div>
+      <div class="toc-grid">
+        <a href="#sec-overview" class="toc-item">
+          <span class="toc-badge">০১</span>
+          <span>সিস্টেম ওভারভিউ ও মূল লক্ষ্য</span>
+        </a>
+        <a href="#sec-benefits" class="toc-item" style="background: #f0fdf4; border-left: 3px solid var(--primary);">
+          <span class="toc-badge" style="background:#bbf7d0; color:#166534;">০২</span>
+          <span style="font-weight:700; color:var(--primary-dark);">সমিতির বাস্তব লাভ ও সমস্যা সমাধান 💎</span>
+        </a>
+        <a href="#sec-dashboard" class="toc-item">
+          <span class="toc-badge">০৩</span>
+          <span>লাইভ ড্যাশবোর্ড ও ক্যাশ স্থিতি</span>
+        </a>
+        <a href="#sec-members" class="toc-item">
+          <span class="toc-badge">০৪</span>
+          <span>সদস্য প্রোফাইল ও ডিজিটাল অনবোর্ডিং</span>
+        </a>
+        <a href="#sec-idcard" class="toc-item">
+          <span class="toc-badge">০৫</span>
+          <span>ডিজিটাল মেম্বার আইডি কার্ড প্রিন্ট</span>
+        </a>
+        <a href="#sec-savings" class="toc-item">
+          <span class="toc-badge">০৬</span>
+          <span>সঞ্চয় জমা ও মাসিক চেকলিস্ট ট্র্যাকিং</span>
+        </a>
+        <a href="#sec-projects" class="toc-item">
+          <span class="toc-badge">০৭</span>
+          <span>প্রজেক্ট ও ক্ষুদ্র বিনিয়োগ পোর্টফোলিও</span>
+        </a>
+        <a href="#sec-installments" class="toc-item">
+          <span class="toc-badge">০৮</span>
+          <span>প্রজেক্ট কিস্তি আদায় ও সময়রেখা</span>
+        </a>
+        <a href="#sec-expenses" class="toc-item">
+          <span class="toc-badge">০৯</span>
+          <span>অফিস ও অপারেশনাল খরচ লেজার</span>
+        </a>
+        <a href="#sec-whatsapp" class="toc-item">
+          <span class="toc-badge" style="background:#dcfce7; color:#15803d;">১০</span>
+          <span>হোয়াটসঅ্যাপ/SMS বকেয়া তাগাদা সিস্টেম</span>
+        </a>
+        <a href="#sec-receipts" class="toc-item">
+          <span class="toc-badge">১১</span>
+          <span>ব্যাংক-গ্রেড টাকা প্রাপ্তি রসিদ (Receipts)</span>
+        </a>
+        <a href="#sec-reports" class="toc-item">
+          <span class="toc-badge">১২</span>
+          <span>৭-স্তরের রিপোর্ট, এক্সেল ও PDF এক্সপোর্ট</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- SECTION 1: System Overview -->
+    <section id="sec-overview" class="section">
+      <div class="section-header">
+        <div class="section-icon">🌟</div>
+        <div>
+          <h2 class="section-title">১. সিস্টেম পরিচিতি, মূল লক্ষ্য ও মডিউল সংক্ষেপ</h2>
+          <p class="section-tagline">EDA এর জন্য বিশেষভাবে প্রস্তুতকৃত আধুনিক সমবায় সমাধান</p>
+        </div>
+      </div>
+
+      <div class="feature-card card-highlight">
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">সফটওয়্যারটির মূল লক্ষ্য</h3>
+        <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 20px;">
+          <strong>EDA (Entrepreneur Development Association)</strong> সিস্টেমটি সমবায় সমিতির সাধারণ সঞ্চয় কালেকশন এবং প্রজেক্টভিত্তিক ক্ষুদ্র বিনিয়োগ (যেমন: অটোরিকশা, সিএনজি, যানবাহন ও ছোট ব্যবসায়িক পার্টনারশিপ) অত্যন্ত স্বচ্ছ, নির্ভুল এবং পেশাদারভাবে পরিচালনা করার জন্য তৈরি একটি পরিপূর্ণ এন্টারপ্রাইজ ওয়েব অ্যাপ্লিকেশন।
+        </p>
+
+        <!-- Core Modules at a Glance -->
+        <h4 style="color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+          🧩 সফটওয়্যারের প্রধান ৮টি মডিউল ও সংক্ষেপে তাদের কাজ (Modules at a Glance)
+        </h4>
+
+        <div class="grid-2">
+          <div style="background: var(--bg-body); border: 1px solid var(--border); border-left: 3.5px solid var(--primary); border-radius: 10px; padding: 14px 16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:1.15rem;">📊</span>
+              <strong style="color: var(--primary-dark); font-size: 0.95rem;">১. ড্যাশবোর্ড (Live Dashboard)</strong>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+              <strong>মূল কাজ:</strong> সমিতির বর্তমান নগদ ক্যাশ স্থিতি (Live Cash Reserve), মোট সদস্য, সঞ্চয়, বিনিয়োগ ও প্রধান ৮টি আর্থিক সূচক লাইভ এক নজরে প্রদর্শন।
+            </p>
+          </div>
+
+          <div style="background: var(--bg-body); border: 1px solid var(--border); border-left: 3.5px solid var(--secondary); border-radius: 10px; padding: 14px 16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:1.15rem;">👥</span>
+              <strong style="color: var(--secondary-dark); font-size: 0.95rem;">২. সদস্য ব্যবস্থাপনা (Member KYC)</strong>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+              <strong>মূল কাজ:</strong> সদস্যদের নাম, মোবাইল, ছবি, এনআইডি ও নমিনির তথ্য সংরক্ষণ এবং স্বয়ংক্রিয় ইউনিক ৩-ডিজিটের মেম্বার আইডি (যেমন: 001) তৈরি।
+            </p>
+          </div>
+
+          <div style="background: var(--bg-body); border: 1px solid var(--border); border-left: 3.5px solid var(--accent); border-radius: 10px; padding: 14px 16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:1.15rem;">🪪</span>
+              <strong style="color: var(--accent-dark); font-size: 0.95rem;">৩. স্মার্ট মেম্বার আইডি কার্ড (Digital ID)</strong>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+              <strong>মূল কাজ:</strong> সদস্যের ছবি, কিউআর কোড (QR) ও সভাপতির ডিজিটাল স্বাক্ষর সংবলিত প্রিন্ট-রেডি প্লাস্টিক মেম্বার আইডি কার্ড ১-ক্লিকে তৈরি ও ডাউনলোড।
+            </p>
+          </div>
+
+          <div style="background: var(--bg-body); border: 1px solid var(--border); border-left: 3.5px solid var(--primary); border-radius: 10px; padding: 14px 16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:1.15rem;">💰</span>
+              <strong style="color: var(--primary-dark); font-size: 0.95rem;">৪. সঞ্চয় জমা ও চেকলিস্ট (Savings Tracker)</strong>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+              <strong>মূল কাজ:</strong> প্রতি মাসের সঞ্চয় জমা এন্ট্রি, মাসিক চেকলিস্টে পরিশোধিত/বকেয়া স্ট্যাটাস ট্র্যাকিং এবং তারিখভিত্তিক ক্যাশ জমার হিস্ট্রি রাখা।
+            </p>
+          </div>
+
+          <div style="background: var(--bg-body); border: 1px solid var(--border); border-left: 3.5px solid #0284c7; border-radius: 10px; padding: 14px 16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:1.15rem;">🚗</span>
+              <strong style="color: #0369a1; font-size: 0.95rem;">৫. প্রজেক্ট ও বিনিয়োগ (Project Portfolio)</strong>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+              <strong>মূল কাজ:</strong> অটোরিকশা/ব্যবসা বিনিয়োগে কত পার্সেন্ট লাভে কত টাকা লাভ আসবে তার হিসাব, লাইভ কিস্তি আদায় প্রগ্রেস ও পেপারলেস ড্রাইভার রেকর্ড।
+            </p>
+          </div>
+
+          <div style="background: var(--bg-body); border: 1px solid var(--border); border-left: 3.5px solid #d97706; border-radius: 10px; padding: 14px 16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:1.15rem;">📑</span>
+              <strong style="color: #b45309; font-size: 0.95rem;">৬. অফিস ও অপারেশনাল খরচ (Expenses)</strong>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+              <strong>মূল কাজ:</strong> অফিস ভাড়া, বিদ্যুৎ বিল ও পরিচালনা খরচের ক্যাটাগরিভিত্তিক ভাউচার এন্ট্রি, যা সরাসরি সমিতির মোট ক্যাশ থেকে কর্তন হয়।
+            </p>
+          </div>
+
+          <div style="background: var(--bg-body); border: 1px solid var(--border); border-left: 3.5px solid var(--whatsapp); border-radius: 10px; padding: 14px 16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:1.15rem;">📲</span>
+              <strong style="color: #128c7e; font-size: 0.95rem;">৭. হোয়াটসঅ্যাপ তাগাদা ও রসিদ (Receipt & Alerts)</strong>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+              <strong>মূল কাজ:</strong> ১-ক্লিকে সদস্যদের কাছে বকেয়ার বকেয়া তাগাদা নোটিশ পাঠানো এবং প্রতিটি জমার বিপরীতে ব্যাংক-গ্রেড মানি রসিদ মেম্বারের হোয়াটসঅ্যাপে বিতরণ।
+            </p>
+          </div>
+
+          <div style="background: var(--bg-body); border: 1px solid var(--border); border-left: 3.5px solid #6366f1; border-radius: 10px; padding: 14px 16px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:1.15rem;">📈</span>
+              <strong style="color: #4338ca; font-size: 0.95rem;">৮. ৭-স্তরের রিপোর্ট ও এক্সপোর্ট (Audit & Export)</strong>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.55;">
+              <strong>মূল কাজ:</strong> দিনভিত্তিক, মাসিক ও বাৎসরিক ৭টি অডিট খাতা দেখা এবং ১-ক্লিকে বাংলায় এক্সেল (.xlsx) ও ক্রিস্টাল ক্লিয়ার পিডিএফ ডাউনলোড।
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: Real-World Benefits & Problem Solver -->
+    <section id="sec-benefits" class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: var(--primary-dark);">💎</div>
+        <div>
+          <h2 class="section-title">২. সমিতির বাস্তব লাভ ও শতভাগ স্বচ্ছতা (কেন এই সিস্টেম অপরিহার্য?)</h2>
+          <p class="section-tagline">মাস শেষে কষ্টকর খাতা মেলানোর বৈঠক ও সদস্যদের ভুল বোঝাবুঝি-তর্কাতর্কির চিরতরে অবসান</p>
+        </div>
+      </div>
+
+      <div class="feature-card card-highlight">
+        <div class="benefit-highlight-box">
+          <h3 style="color: var(--primary-dark); font-size: 1.15rem; margin-bottom: 6px;">
+            🎯 মূল সমস্যা ও EDA-এর বিপ্লবী সমাধান
+          </h3>
+          <p style="color: var(--text-main); font-size: 0.92rem; line-height: 1.7;">
+            সনাতন সমবায় পরিচালনায় সবচেয়ে জটিল ও অস্বস্তিকর কাজ হলো <strong>মাস শেষে সব সদস্যকে ডেকে ঘণ্টার পর ঘণ্টা খাতা-কলম নিয়ে হিসাব মেলানো</strong>। হিসাবের একটু গরমিল বা বোঝার ভুলে সদস্যদের মধ্যে অনাকাঙ্ক্ষিত সন্দেহ ও তর্কাতর্কি সৃষ্টি হতো, যা সমিতির ঐক্য নষ্ট করত। <strong>EDA ডিজিটাল ম্যানেজমেন্ট সিস্টেমে সেই সন্দেহ ও তর্কাতর্কির আর কোনো সুযোগ নেই!</strong>
+          </p>
+        </div>
+
+        <div class="grid-2" style="margin-top: 16px;">
+          <div class="feature-item">
+            <span class="bullet" style="color: var(--primary); font-size: 1.3rem;">✅</span>
+            <div>
+              <strong style="color: var(--primary-dark); font-size: 0.95rem;">১-ক্লিকে নিজ অ্যাকাউন্টে সম্পূর্ণ হিসাব:</strong>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 2px;">
+                প্রত্যেক সদস্যকে নিজস্ব সুরক্ষিত ইউজারনেম ও পাসওয়ার্ড দেওয়া হয়। যেকোনো সদস্য তার স্মার্টফোন থেকে মাত্র <strong>১-ক্লিকেই</strong> দেখতে পারেন তার মোট সঞ্চয় জমা কত, বকেয়া আছে কিনা এবং সমিতির সার্বিক পরিস্থিতি কী।
+              </p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet" style="color: var(--primary); font-size: 1.3rem;">✅</span>
+            <div>
+              <strong style="color: var(--primary-dark); font-size: 0.95rem;">হিসাবের জন্য আলাদা বৈঠকের প্রয়োজন নেই:</strong>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 2px;">
+                সিস্টেমে টাকা জমার সাথে সাথেই সব হিসাব নিজে থেকে রিয়েলটাইমে ক্যালকুলেট হয়ে যায়। তাই মাস শেষে হিসাব মেলানোর জন্য আলাদা মিটিং ডাকার কোনো ঝামেলা নেই।
+              </p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet" style="color: var(--primary); font-size: 1.3rem;">✅</span>
+            <div>
+              <strong style="color: var(--primary-dark); font-size: 0.95rem;">সদস্যদের তর্কাতর্কি ও সন্দেহের সুযোগ বন্ধ:</strong>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 2px;">
+                খাতার হিসাব মুছে যাওয়া বা একজনের জমা অন্যজনের নামে ওঠার ভয় নেই। প্রতিটি লেনদেনে ডিজিটাল ভাউচার ও রসিদ থাকায় সমিতির প্রতিটি পাই-পয়সা শতভাগ স্বচ্ছ।
+              </p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet" style="color: var(--primary); font-size: 1.3rem;">✅</span>
+            <div>
+              <strong style="color: var(--primary-dark); font-size: 0.95rem;">সমিতির প্রতি অটুট আস্থা ও একতা:</strong>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 2px;">
+                সদস্যরা যখন নিজেদের চোখের সামনে স্বচ্ছ হিসাব দেখতে পান, তখন পরিচালকদের প্রতি তাদের বিশ্বাস বহুগুণ বৃদ্ধি পায় এবং সমিতি দ্রুত সমৃদ্ধির দিকে এগিয়ে যায়।
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Before vs After Comparison Grid -->
+        <h4 style="color: var(--primary-dark); margin: 20px 0 10px; font-size: 1rem;">
+          📊 মুখোমুখি তুলনা: সনাতন খাতা-কলম পদ্ধতি বনাম EDA ডিজিটাল সিস্টেম
+        </h4>
+        <div class="comparison-grid">
+          <div class="compare-col compare-bad">
+            <h4>❌ সনাতন খাতা-কলম পদ্ধতি</h4>
+            <ul style="padding-left: 18px; font-size: 0.85rem; line-height: 1.8; color: #7f1d1d;">
+              <li>মাস শেষে ঘণ্টার পর ঘণ্টা বৈঠক ডেকে হিসাব মেলাতে গিয়ে চরম ক্লান্তি ও সময় অপচয়।</li>
+              <li>হিসাবে কাটাকাটি বা অস্পষ্টতার কারণে সদস্যদের মধ্যে সন্দেহ ও অপ্রীতিকর তর্কাতর্কি।</li>
+              <li>কোনো সদস্যের জমা হয়েছে কিনা তা যাচাই করতে ম্যানেজারের খাতা দেখা ছাড়া উপায় নেই।</li>
+              <li>হিসাবের খাতা নষ্ট হলে বা হারিয়ে গেলে সমিতির সমস্ত সঞ্চয়ের রেকর্ড চিরতরে বিলীন।</li>
+              <li>বকেয়া টাকার কথা মুখে বলতে গিয়ে সংকোচ বা ভুল বোঝাবুঝি।</li>
+            </ul>
+          </div>
+          <div class="compare-col compare-good">
+            <h4>💎 EDA আধুনিক ডিজিটাল সিস্টেম</h4>
+            <ul style="padding-left: 18px; font-size: 0.85rem; line-height: 1.8; color: #14532d;">
+              <li><strong>হিসাব মেলানোর জন্য কোনো পৃথক বৈঠকের প্রয়োজন নেই</strong>; ব্যালেন্স লাইভ আপডেট হয়।</li>
+              <li><strong>১০০% স্বচ্ছ হিসাব</strong>—সন্দেহ বা তর্কাতর্কির কোনো সুযোগ আর নেই।</li>
+              <li><strong>যে যার ঘরে বসে নিজের মোবাইলে ১-ক্লিকেই</strong> সম্পূর্ণ হিসাব দেখতে পান।</li>
+              <li>ক্লাউড ডাটাবেজ ব্যাকআপ—মোবাইল বা পিসি নষ্ট হলেও ১ টাকার হিসাবও হারাবে না।</li>
+              <li><strong>১-ক্লিকে হোয়াটসঅ্যাপে মার্জিত বকেয়া নোটিশ ও মানি রসিদ</strong> প্রেরণ।</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: Dashboard -->
+    <section id="sec-dashboard" class="section">
+      <div class="section-header">
+        <div class="section-icon">📊</div>
+        <div>
+          <h2 class="section-title">২. এক্সিকিউটিভ ড্যাশবোর্ড ও রিয়েলটাইম ক্যাশ স্থিতি</h2>
+          <p class="section-tagline">এক নজরে সমিতির সার্বিক আর্থিক চিত্র ও তারল্য হিসাব</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <p style="margin-bottom: 16px;">
+          অ্যাডমিন লগইন করার সাথে সাথেই সমিতির প্রধান ৮টি আর্থিক সূচক (KPI) এবং বর্তমান হাতের নগদ স্থিতি লাইভ দেখতে পান।
+        </p>
+
+        <!-- Live Cash Liquidity Formula Card -->
+        <div style="background: linear-gradient(135deg, #064e3b, #047857); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow-md);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">হাতের নগদ / বর্তমান ক্যাশ স্থিতি (Live Cash Reserve)</span>
+            <span style="background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 20px; font-size: 0.75rem;">স্বয়ংক্রিয় গণনাকৃত</span>
+          </div>
+          <div style="font-size: 1.8rem; font-weight: 700; margin-bottom: 8px;">
+            বর্তমান ব্যালেন্স = (মোট সঞ্চয় জমা + মোট কিস্তি আদায়) - (মোট প্রজেক্ট বিনিয়োগ + মোট খরচ)
+          </div>
+          <p style="font-size: 0.85rem; opacity: 0.85;">
+            💡 এই সূত্রটি সমিতির কোনো সঞ্চয় বা কিস্তি আসার সাথে সাথে অথবা কোনো প্রজেক্টে বিনিয়োগ বা খরচ হওয়ার সাথে সাথে সেকেন্ডের মধ্যে নিজে থেকে ব্যালেন্স আপডেট করে।
+          </p>
+        </div>
+
+        <h4 style="color: var(--primary-dark); margin-bottom: 12px;">ড্যাশবোর্ডের প্রধান ৮টি মেট্রিক্স:</h4>
+        <div class="grid-2">
+          <div class="feature-item">
+            <span class="bullet">✔</span>
+            <div><strong>মোট সদস্য (Total Members):</strong> সক্রিয় ও নিবন্ধিত সকল সদস্যের সর্বমোট সংখ্যা।</div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet">✔</span>
+            <div><strong>মোট সঞ্চয় জমা (Total Savings):</strong> সদস্যদের কাছ থেকে এ পর্যন্ত গৃহীত সমস্ত সঞ্চয়ের যোগফল।</div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet">✔</span>
+            <div><strong>সদস্যদের মোট বকেয়া (Members Overdue):</strong> বর্তমান মাস পর্যন্ত সদস্যদের না দেওয়া সঞ্চয়ের বকেয়া।</div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet">✔</span>
+            <div><strong>মোট বিনিয়োগ (Total Investments):</strong> বিভিন্ন প্রজেক্টে বিনিয়োগকৃত মোট অর্থের পরিমাণ।</div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet">✔</span>
+            <div><strong>মোট কিস্তি আদায় (Installment Collections):</strong> প্রজেক্ট থেকে আদায়কৃত সর্বমোট মূলধন ও লাভ।</div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet">✔</span>
+            <div><strong>প্রজেক্টের মোট বকেয়া (Project Outstanding):</strong> বিভিন্ন প্রজেক্টে এখনো বাকি থাকা কিস্তির মোট টাকা।</div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet">✔</span>
+            <div><strong>মোট অফিস খরচ (Total Expenses):</strong> সমিতির যাবতীয় পরিচালনা ও ভেন্ডর খরচ।</div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet">✔</span>
+            <div><strong>প্রজেক্টের নীট লাভ (Net Returns):</strong> বিনিয়োগের বিপরীতে প্রজেক্ট থেকে অর্জিত প্রকৃত মুনাফা।</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: Member Management -->
+    <section id="sec-members" class="section">
+      <div class="section-header">
+        <div class="section-icon">👥</div>
+        <div>
+          <h2 class="section-title">৩. সদস্য প্রোফাইল ও ডিজিটাল অনবোর্ডিং (KYC)</h2>
+          <p class="section-tagline">সহজ নিবন্ধন, ছবি আপলোড, এনআইডি এবং নমিনির সম্পূর্ণ রেকর্ড</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="grid-2">
+          <div>
+            <h4 style="color: var(--primary-dark); margin-bottom: 10px;">স্বয়ংক্রিয় ৩-ডিজিটের সদস্য আইডি</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px;">
+              ডাটাবেজে নতুন সদস্য যুক্ত হওয়ার সাথে সাথে সিস্টেম স্বয়ংক্রিয়ভাবে একটি ইউনিক সিকোয়েন্সিয়াল মেম্বার আইডি তৈরি করে (যেমন: <code>001</code>, <code>002</code>, <code>003</code>)। ফলে ম্যানুয়াল আইডি দেয়ার ভুলের সম্ভাবনা থাকে না।
+            </p>
+            <h4 style="color: var(--primary-dark); margin-bottom: 10px;">ডিজিটাল তথ্যভাণ্ডারে যা যা সংরক্ষিত হয়:</h4>
+            <ul style="padding-left: 20px; color: var(--text-main); font-size: 0.9rem; line-height: 1.8;">
+              <li>সদস্যের নাম, পদবী ও পেশা</li>
+              <li>সরাসরি মোবাইল নম্বর (হোয়াটসঅ্যাপ লিঙ্কড)</li>
+              <li>পিতা ও মাতার নাম / স্থায়ী ঠিকানা</li>
+              <li>জাতীয় পরিচয়পত্র (NID) নম্বর ও স্ক্যান কপি</li>
+              <li>যোগদানের তারিখ ও মাসিক নির্ধারিত সঞ্চয় কিস্তি</li>
+              <li>নমিনির নাম, সম্পর্ক, মোবাইল ও নমিনির NID কপি</li>
+              <li>গ্যারান্টারের নাম ও যোগাযোগ নম্বর</li>
+            </ul>
+          </div>
+          <div>
+            <div style="background: var(--bg-body); border: 1px solid var(--border); border-radius: 12px; padding: 18px;">
+              <h5 style="color: var(--primary); margin-bottom: 8px;">📷 লাইভ ক্যামেরা ও গ্যালারি ফটো আপলোড</h5>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                মোবাইল ফোনের ক্যামেরা দিয়ে সরাসরি সদস্যের ছবি তুলে সাথে সাথেই আপলোড করা যায়। ছবি স্বয়ংক্রিয়ভাবে অপ্টিমাইজ হয়ে মেম্বার কার্ড ও রসিদে যুক্ত হয়।
+              </p>
+              <div style="background: white; border-left: 3px solid var(--secondary); padding: 10px 14px; border-radius: 6px; font-size: 0.85rem;">
+                🔍 <strong>দ্রুত সার্চ ও ফিল্টারিং:</strong> সদস্যের নাম, মোবাইল নম্বর কিংবা আইডি লিখে সাথে সাথেই কয়েকশ সদস্যের মধ্য থেকে ১ সেকেন্ডে যে কাউকে খুঁজে বের করা যায়।
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: Digital Member ID Card -->
+    <section id="sec-idcard" class="section">
+      <div class="section-header">
+        <div class="section-icon">🪪</div>
+        <div>
+          <h2 class="section-title">৪. ডিজিটাল মেম্বার আইডি কার্ড জেনারেটর</h2>
+          <p class="section-tagline">আন্তর্জাতিক মানের অফিসিয়াল ডিজিটাল আইডি কার্ড যা সরাসরি প্রিন্ট উপযোগী</p>
+        </div>
+      </div>
+
+      <div class="feature-card card-accent">
+        <div class="grid-2">
+          <div>
+            <h3 style="color: var(--accent-dark); margin-bottom: 8px;">স্মার্ট কার্ডের বৈশিষ্ট্যসমূহ</h3>
+            <p style="color: var(--text-muted); margin-bottom: 16px;">
+              প্রতিটি সদস্যের জন্য সিস্টেম নিজে থেকে একটি ফ্রন্ট এবং ব্যাক সংবলিত চমৎকার পরিচয়পত্র তৈরি করে। এটি সরাসরি প্লাস্টিক কার্ড (PVC) হিসেবে প্রিন্ট করে সদস্যদের গলায় ঝুলিয়ে দেয়ার উপযোগী।
+            </p>
+            <div class="feature-item">
+              <span class="bullet">⭐</span>
+              <div><strong>অফিসিয়াল ব্র্যান্ডিং:</strong> EDA মূল লোগো, মনোগ্রাম এবং ব্র্যান্ড কালার সংবলিত।</div>
+            </div>
+            <div class="feature-item">
+              <span class="bullet">⭐</span>
+              <div><strong>QR কোড ও বারকোড:</strong> সদস্য যাচাইকরণের জন্য স্মার্ট QR কোড ইন্টিগ্রেটেড।</div>
+            </div>
+            <div class="feature-item">
+              <span class="bullet">⭐</span>
+              <div><strong>অনুমোদিত স্বাক্ষর:</strong> সভাপতির ডিজিটাল স্বাক্ষর এবং ইস্যু তারিখ সংবলিত।</div>
+            </div>
+            <div class="feature-item">
+              <span class="bullet">⭐</span>
+              <div><strong>জরুরি যোগাযোগের তথ্য:</strong> পেছনের অংশে সমিতি ও অভিভাবকের ফোন নম্বর।</div>
+            </div>
+          </div>
+          <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center;">
+            <div style="border: 2px dashed var(--accent); padding: 16px; border-radius: 10px; background: #fffdf5;">
+              <span style="font-size: 0.85rem; font-weight: 700; color: var(--accent-dark);">📥 ১-ক্লিকে হাই-রেজ্যুলেশন ডাউনলোড</span>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 8px 0 12px;">
+                যেকোনো ফটো ল্যাব বা প্লাস্টিক আইডি কার্ড প্রিন্টারে ক্রিস্টাল ক্লিয়ার রেজ্যুলেশনে প্রিন্ট করার জন্য PNG ও PDF ফরম্যাটে ডাউনলোড করা যায়।
+              </p>
+              <span class="tag tag-amber">Print-Ready 300 DPI</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: Savings & Monthly Schedule -->
+    <section id="sec-savings" class="section">
+      <div class="section-header">
+        <div class="section-icon">💰</div>
+        <div>
+          <h2 class="section-title">৫. মাসিক সঞ্চয় জমা ও ইন্টারেক্টিভ চেকলিস্ট</h2>
+          <p class="section-tagline">প্রতিটি মাসের জমার নিখুঁত হিসাব ও অটোমেটেড বকেয়া গণনা</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <p style="margin-bottom: 16px;">
+          সদস্যের বিস্তারিত ভিউতে ঢুকলেই তার যোগদানের মাস থেকে শুরু করে আজ পর্যন্ত প্রতি মাসের জমার অবস্থা একটি ভিজ্যুয়াল ম্যাট্রিক্স টেবিলে প্রদর্শন করা হয়।
+        </p>
+
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>মাসের নাম</th>
+              <th>নির্ধারিত কিস্তি</th>
+              <th>প্রকৃত জমা</th>
+              <th>স্ট্যাটাস (Status)</th>
+              <th>অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>জানুয়ারি ২০২৬</strong></td>
+              <td>৳ ১,০০০</td>
+              <td>৳ ১,০০০</td>
+              <td><span class="tag tag-green">পরিশোধিত (PAID)</span></td>
+              <td>রসিদ দেখুন / প্রিন্ট</td>
+            </tr>
+            <tr>
+              <td><strong>ফেব্রুয়ারি ২০২৬</strong></td>
+              <td>৳ ১,০০০</td>
+              <td>৳ ৫০০</td>
+              <td><span class="tag tag-amber">আংশিক (PARTIAL)</span></td>
+              <td>বাকি ৫০০ টাকা জমা নিন</td>
+            </tr>
+            <tr>
+              <td><strong>মার্চ ২০২৬</strong></td>
+              <td>৳ ১,০০০</td>
+              <td>৳ ০</td>
+              <td><span class="tag tag-red">বকেয়া (DUE)</span></td>
+              <td>হোয়াটসঅ্যাপ তাগাদা পাঠান 📲</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="background: var(--primary-soft); padding: 14px 18px; border-radius: 8px; margin-top: 14px; font-size: 0.88rem; color: var(--primary-dark);">
+          ⚡ <strong>দ্রুত জমা এন্ট্রি:</strong> "নতুন জমা এন্ট্রি করুন" বাটনে ক্লিক করে সংশ্লিষ্ট মাস সিলেক্ট করে এমাউন্ট সাবমিট করলেই ডাটাবেজ আপডেট হয়ে যায় এবং সাথে সাথে স্ক্রিনে অফিশিয়াল মানি রসিদ ওপেন হয়।
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: Projects & Investments -->
+    <section id="sec-projects" class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: linear-gradient(135deg, #e0f2fe, #bae6fd); color: #0284c7;">🚗</div>
+        <div>
+          <h2 class="section-title">৭. প্রজেক্ট ও ক্ষুদ্র বিনিয়োগ পোর্টফোলিও (Investment Portfolio)</h2>
+          <p class="section-tagline">বিনিয়োগের বর্তমান অবস্থা, শতকরা লাভ নির্ধারণ, পূর্বের মুনাফা আর্কাইভ ও ১০০% পেপারলেস ডিজিটাল KYC</p>
+        </div>
+      </div>
+
+      <!-- 1. Investment Status Overview Card -->
+      <div class="feature-card card-highlight">
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 14px; line-height: 1.65;">
+          সমিতির সবচেয়ে স্পর্শকাতর ও গুরুত্বপূর্ণ অংশ হলো <strong>ক্ষুদ্র বিনিয়োগ ও প্রজেক্ট ব্যবস্থাপনা</strong> (যেমন: সদস্যদের বা চালকদের অটোরিকশা/সিএনজি কিনে দেওয়া, পরিবহন যানবাহন কিংবা ব্যবসা পার্টনারশিপ)। এই সিস্টেমে সমিতির প্রতিটি বিনিয়োগের বর্তমান স্থিতি, কত পার্সেন্টে কত লাভ আসবে, অতীতে শেষ হওয়া প্রজেক্ট থেকে কত টাকা মুনাফা এসেছে এবং গ্রহীতাদের সমস্ত কাগজপত্র ডিজিটালভাবে সংরক্ষিত থাকে।
+        </p>
+
+        <h4 style="color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
+          📍 ১. সমিতির বিনিয়োগ কোথায় কী অবস্থায় আছে? (Live Portfolio Status)
+        </h4>
+        <div class="grid-3">
+          <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color: #166534; font-size: 0.9rem;">🟢 চলমান প্রজেক্ট (Running)</strong>
+              <span class="tag tag-green">নিয়মিত কিস্তি</span>
+            </div>
+            <p style="font-size: 0.8rem; color: #14532d; line-height: 1.5;">
+              যেসব গাড়ির বা ব্যবসার কিস্তি বর্তমানে নিয়মিতভাবে আদায় হচ্ছে। প্রতি মাসের কিস্তি আদায়ের অগ্রগতি লাইভ প্রগ্রেস বারে দেখা যায়।
+            </p>
+          </div>
+
+          <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 10px; padding: 12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color: #991b1b; font-size: 0.9rem;">🟡 বকেয়া প্রজেক্ট (Due)</strong>
+              <span class="tag tag-red">তাগাদার তালিকা</span>
+            </div>
+            <p style="font-size: 0.8rem; color: #7f1d1d; line-height: 1.5;">
+              কোন চালক বা উদ্যোক্তার কত টাকা কিস্তি বাকি পড়েছে তা চিহ্নিত করা থাকে, যেন ১-ক্লিকেই হোয়াটসঅ্যাপে বকেয়া তাগাদা পাঠানো যায়।
+            </p>
+          </div>
+
+          <div style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 10px; padding: 12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color: #1e40af; font-size: 0.9rem;">🔵 সম্পন্ন প্রজেক্ট (Completed)</strong>
+              <span class="tag tag-blue">সম্পূর্ণ আদায়</span>
+            </div>
+            <p style="font-size: 0.8rem; color: #1e3a8a; line-height: 1.5;">
+              মূলধন ও লাভসহ সম্পূর্ণ টাকা সফলভাবে সমিতিতে ফেরত এসেছে এমন সফল প্রজেক্টসমূহ স্থায়ী আর্কাইভে জমা থাকে।
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Profit & Percentage Calculator Card -->
+      <div class="feature-card" style="background: linear-gradient(135deg, #064e3b 0%, #047857 60%, #0284c7 100%); color: white; border-radius: 12px; padding: 18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+          <h4 style="font-size: 1.05rem; color: white; margin: 0;">
+            📈 ২. কত পার্সেন্টে কত লাভ আসবে? (অটোমেটেড লাভ ক্যালকুলেটর)
+          </h4>
+          <span style="background: rgba(255,255,255,0.22); color:white; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight:600;">
+            লাইভ ফর্মুলা
+          </span>
+        </div>
+        <p style="font-size: 0.88rem; opacity: 0.92; margin-bottom: 12px; line-height: 1.6;">
+          প্রজেক্ট এন্ট্রি করার সময় অ্যাডমিন যখনই <strong>মূলধনের পরিমাণ</strong> এবং <strong>লক্ষ্যমাত্রার লাভের পার্সেন্ট (%)</strong> বসান, সিস্টেম নিজে থেকে সেকেন্ডের মধ্যে মোট মুনাফা ও মাসিক কিস্তি হিসাব করে স্ক্রিনে লাইভ কালার কোডেড ফলাফল দেখায়:
+        </p>
+
+        <div class="grid-3">
+          <div style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; padding: 10px; text-align:center;">
+            <div style="font-size: 0.72rem; text-transform: uppercase; opacity: 0.85;">বিনিয়োগকৃত মূলধন (Capital)</div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: #fef08a; margin-top: 2px;">৳ ৩,০০,০০০</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; padding: 10px; text-align:center;">
+            <div style="font-size: 0.72rem; text-transform: uppercase; opacity: 0.85;">মুনাফার হার ও মোট লাভ</div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: #86efac; margin-top: 2px;">২০% = ৳ ৬০,০০০ লাভ</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; padding: 10px; text-align:center;">
+            <div style="font-size: 0.72rem; text-transform: uppercase; opacity: 0.85;">মোট আদায় ও মাসিক কিস্তি</div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: #67e8f9; margin-top: 2px;">৳ ৩,৬০,০০০ (২৪ মাসে ৳ ১৫,০০০)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Historical Archives (Completed Projects Profit) Card -->
+      <div class="feature-card" style="background: #f8fafc; border: 1px solid var(--border); border-left: 4.5px solid #0284c7; border-radius: 12px; padding: 16px;">
+        <h4 style="color: #0369a1; font-size: 1rem; margin-bottom: 6px; display:flex; align-items:center; gap:8px;">
+          🏆 ৩. পূর্বে সম্পন্ন হওয়া প্রজেক্ট থেকে কত বেনিফিট বা মুনাফা এসেছে?
+        </h4>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px;">
+          অনেক সমিতিতে অতীতে শেষ হওয়া প্রজেক্টের হিসাব খাতার পাতার নিচে চাপা পড়ে হারিয়ে যায়। EDA সফটওয়্যারে <strong>"সম্পন্ন প্রজেক্ট আর্কাইভ"</strong> নামক স্থায়ী রেকর্ড সংরক্ষিত থাকে।
+        </p>
+        <div class="grid-2">
+          <div style="background: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+            <strong style="color: var(--primary-dark); font-size: 0.85rem;">📊 মোট সফল বিনিয়োগের হিস্ট্রি:</strong>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">
+              কয়টি গাড়ি বা ব্যবসা সফলভাবে সম্পূর্ণ কিস্তি পরিশোধ করেছে এবং তাদের কাছ থেকে মোট কত লাখ টাকা মূলধন নিরাপদে সমিতিতে ফেরত এসেছে।
+            </p>
+          </div>
+          <div style="background: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+            <strong style="color: #0284c7; font-size: 0.85rem;">💰 মোট অর্জিত নীট মুনাফা (Net Profit Achieved):</strong>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">
+              সম্পন্ন হওয়া অতীত প্রজেক্টগুলো থেকে সমিতিতে সর্বমোট কত টাকা নীট লাভ যুক্ত হয়েছে, যা সদস্যদের মাঝে লভ্যাংশ হিসেবে বণ্টনযোগ্য।
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Paperless Digital Documents & KYC Card -->
+      <div class="feature-card" style="background: #fffbeb; border: 1.5px solid #fde68a; border-left: 4.5px solid var(--accent); border-radius: 12px; padding: 16px;">
+        <h4 style="color: #b45309; font-size: 1rem; margin-bottom: 6px; display:flex; align-items:center; gap:8px;">
+          📁 ৪. সনাতন কাগজের ফাইলের ঝামেলা শেষ: ১০০% পেপারলেস ডিজিটাল ডকুমেন্টস
+        </h4>
+        <p style="font-size: 0.88rem; color: #78350f; line-height: 1.6; margin-bottom: 12px;">
+          আগে চালক বা গ্রহীতাদের জাতীয় পরিচয়পত্রের ফটোকপি, ড্রাইভিং লাইসেন্স, চুক্তিপত্র বা ছবি ফাইলের স্তূপে জমে নষ্ট বা হারিয়ে যেত। জরুরি মুহূর্তে খুঁজে পাওয়া যেত না। এখন যেকোনো স্থান থেকে মোবাইল ফোনের ১-ক্লিকেই তাদের যাবতীয় তথ্য পাওয়া যায়:
+        </p>
+        <div class="grid-2">
+          <ul style="padding-left: 18px; font-size: 0.84rem; line-height: 1.75; color: #78350f;">
+            <li><strong>চালকের ছবি ও পূর্ণ ঠিকানা:</strong> লাইভ ফটো আপলোড ও স্থায়ী ঠিকানা সংরক্ষণ।</li>
+            <li><strong>জাতীয় পরিচয়পত্র (NID Front & Back):</strong> কার্ডের উভয় পাশের ডিজিটাল স্ক্যান।</li>
+            <li><strong>ড্রাইভিং লাইসেন্স ও গাড়ির নম্বর:</strong> রেজিস্ট্রেশন ও রুট পারমিটের রেকর্ড।</li>
+          </ul>
+          <ul style="padding-left: 18px; font-size: 0.84rem; line-height: 1.75; color: #78350f;">
+            <li><strong>নমিনির সমস্ত তথ্য:</strong> নমিনির নাম, সম্পর্ক, মোবাইল ও জাতীয় পরিচয়পত্র।</li>
+            <li><strong>গ্যারান্টার/জামিনদারের রেকর্ড:</strong> জরুরি যোগাযোগের জন্য জামিনদারের তথ্য।</li>
+            <li><strong>২৪/৭ ক্লাউড ব্যাকআপ:</strong> কোনো ফাইল ছেঁড়া, পানিতে ভেজা বা নষ্ট হওয়ার ভয় নেই।</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 8: Expenses -->
+    <section id="sec-expenses" class="section">
+      <div class="section-header">
+        <div class="section-icon">📑</div>
+        <div>
+          <h2 class="section-title">৮. অফিস ও অপারেশনাল খরচ লেজার (Expenses)</h2>
+          <p class="section-tagline">সমিতির প্রতিটি ব্যয়ের সুনির্দিষ্ট রেকর্ড ও স্বচ্ছ ক্যাশ হিসাব</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <p style="margin-bottom: 14px;">
+          সমিতি পরিচালনার ছোট-বড় সকল খরচ ক্যাটাগরিভিত্তিক লিপিবদ্ধ রাখা যায়। নতুন খরচ এন্ট্রি করলেই তা স্বয়ংক্রিয়ভাবে ড্যাশবোর্ডের ক্যাশ ব্যালেন্স থেকে কর্তন হয়ে যায়।
+        </p>
+
+        <div class="grid-3">
+          <div style="border: 1px solid var(--border); padding: 12px; border-radius: 8px;">
+            <strong>🏢 অফিস ভাড়া ও বিদ্যুৎ বিল</strong>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">মাসিক নিয়মিত ইউটিলিটি ও স্পেস রেন্টাল বিল ট্র্যাকিং।</p>
+          </div>
+          <div style="border: 1px solid var(--border); padding: 12px; border-radius: 8px;">
+            <strong>☕ নাস্তা ও আপ্যায়ন খরচ</strong>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">সমিতির সাধারণ সভা ও মেম্বারদের আপ্যায়ন ব্যয়।</p>
+          </div>
+          <div style="border: 1px solid var(--border); padding: 12px; border-radius: 8px;">
+            <strong>🖋️ স্টেশনারি ও খাতা-কলম</strong>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">কাগজপত্র, সিল ও অফিস সহকারী প্রিন্টিং সরঞ্জাম।</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 9: WhatsApp & SMS Due Reminders (HIGHLIGHTED REQUIREMENT) -->
+    <section id="sec-whatsapp" class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:#dcfce7; color:#15803d; border-color:rgba(37, 211, 102, 0.4);">📲</div>
+        <div>
+          <h2 class="section-title" style="color: #128c7e;">৯. হোয়াটসঅ্যাপ ও SMS বকেয়া তাগাদা সিস্টেম</h2>
+          <p class="section-tagline">সদস্য ও চালকদের ১-ক্লিকে বকেয়া পরিশোধের নোটিশ পাঠানোর আধুনিক প্রযুক্তি</p>
+        </div>
+      </div>
+
+      <div class="feature-card card-whatsapp">
+        <h3 style="color: #128c7e; margin-bottom: 10px;">কেন এই ফিচারটি সমিতির কালেকশন বহুগুণ বাড়াবে?</h3>
+        <p style="color: var(--text-muted); margin-bottom: 18px;">
+          সনাতন পদ্ধতিতে প্রতি মাসে সদস্যদের ফোন করে বকেয়ার কথা বলা সময়সাপেক্ষ এবং বিব্রতকর। EDA সফটওয়্যারে রয়েছে <strong>১-ক্লিকে হোয়াটসঅ্যাপ ও এসএমএস তাগাদা</strong> পাঠানোর স্মার্ট ফিচার। অ্যাডমিন কোনো প্রকার টাইপিং ছাড়াই মেম্বারের প্রোফাইল থেকে সরাসরি তার হোয়াটসঅ্যাপে প্রি-ফরম্যাটেড মার্জিত তাগাদা মেসেজ পাঠিয়ে দিতে পারেন।
+        </p>
+
+        <!-- Visual WhatsApp Preview -->
+        <div class="whatsapp-preview-box">
+          <div class="whatsapp-header-bar">
+            <img src="public/main_logo.png" onerror="this.src='main_logo.png'" alt="EDA">
+            <div>
+              <div style="font-weight: 700; font-size: 0.95rem;">EDA Somiti Official Notice Bot</div>
+              <div style="font-size: 0.72rem; opacity: 0.85;">অনলাইন ভেরিফাইড বিজনেস অ্যাকাউন্ট</div>
+            </div>
+          </div>
+
+          <div class="whatsapp-bubble">
+            🏦 <strong>Entrepreneur Development Association (EDA)</strong><br>
+            📢 <strong>মাসিক সঞ্চয় ও বকেয়া পরিশোধের তাগাদা নোটিশ</strong><br>
+            ━━━━━━━━━━━━━━━━━━━━━━━━━<br>
+            সম্মানিত সদস্য: <strong>জনাব মোহাম্মদ কামরুল ইসলাম</strong><br>
+            সদস্য আইডি: <strong>EDA-007</strong><br>
+            মোবাইল: <strong>018XXXXXXXX</strong><br><br>
+            
+            আপনার সদয় অবগতির জন্য জানানো যাচ্ছে যে, সমিতির রেকর্ড অনুযায়ী আপনার নিম্নোক্ত মাসের সঞ্চয় কিস্তি বকেয়া রয়েছে:<br>
+            📅 <strong>বকেয়া মাস:</strong> ফেব্রুয়ারি ২০২৬, মার্চ ২০২৬ (মোট ২ মাস)<br>
+            💰 <strong>মোট বকেয়া পরিমাণ:</strong> ৳ ২,০০০/- (দুই হাজার টাকা মাত্র)<br>
+            ⏰ <strong>পরিশোধের শেষ সময়:</strong> আগামী ১০ তারিখের মধ্যে<br><br>
+            
+            💳 <strong>পরিশোধের মাধ্যম:</strong><br>
+            • বিকাশ / নগদ (মার্চেন্ট): 01825334505<br>
+            • ব্যাংক একাউন্ট: EDA Multipurpose Cooperative (A/C: 2050...)<br>
+            • সরাসরি সমিতির অফিসে ক্যাশ কাউন্টারে<br><br>
+            
+            টাকা জমার পরপরই সফটওয়্যার থেকে আপনার ডিজিটাল মানি রসিদ সংগ্রহ করুন। আপনার নিয়মিত সঞ্চয়ই একটি সমৃদ্ধ ভবিষ্যতের নিশ্চয়তা।<br><br>
+            বিনীত,<br>
+            <strong>পরিচালনা পর্ষদ, EDA</strong>
+            <span class="whatsapp-time">11:30 AM ✓✓</span>
+          </div>
+        </div>
+
+        <h4 style="color: var(--primary-dark); margin: 18px 0 10px;">হোয়াটসঅ্যাপ ও এসএমএস তাগাদার মূল সুবিধাসমূহ:</h4>
+        <div class="grid-2">
+          <div class="feature-item">
+            <span class="bullet">💬</span>
+            <div><strong>কোনো থার্ড-পার্টি চার্জ নেই:</strong> আপনার ডিভাইসের অফিসিয়াল হোয়াটসঅ্যাপ ব্যবহার করেই সরাসরি পাঠানো যায়, কোনো অতিরিক্ত SMS গেটওয়ে বিল ছাড়া।</div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet">⚡</span>
+            <div><strong>১-ক্লিক অটোমেশন:</strong> সদস্যের নাম, আইডি, বকেয়া মাস এবং টাকার পরিমাণ সিস্টেম নিজে থেকে টেক্সটে বসিয়ে দেয়।</div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet">🚗</span>
+            <div><strong>প্রজেক্ট চালকদের কিস্তি তাগাদা:</strong> ঠিক একইভাবে যে সকল অটোরিকশা চালকের মাসিক কিস্তি বাকি পড়েছে, তাদেরও বিশেষ তাগাদা পাঠানো যায়।</div>
+          </div>
+          <div class="feature-item">
+            <span class="bullet">📋</span>
+            <div><strong>ক্লিপবোর্ড কপি সুবিধা:</strong> আপনি চাইলে মেসেজটি এক ক্লিকে কপি করে সাধারণ অফলাইন ফোন SMS কিংবা ইমেইলেও পাঠাতে পারবেন।</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 10: Bank-Grade Receipts -->
+    <section id="sec-receipts" class="section">
+      <div class="section-header">
+        <div class="section-icon">🧾</div>
+        <div>
+          <h2 class="section-title">১০. ব্যাংক-গ্রেড ডিজিটাল টাকা প্রাপ্তি রসিদ (Receipts)</h2>
+          <p class="section-tagline">প্রতিটি জমার বিপরীতে শতভাগ নিখুঁত ভাউচার ও ডিজিটাল ক্যাশ মেমো</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="grid-2">
+          <div>
+            <h4 style="color: var(--primary-dark); margin-bottom: 10px;">রসিদের পেশাদার কাঠামো</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px;">
+              EDA সিস্টেমে জেনেরিক বা কাঁচা কোনো রসিদ রাখা হয়নি। ব্যাংকের মানি রসিদের মতো অত্যন্ত রুচিশীল কাঠামোর একটি প্রাতিষ্ঠানিক রসিদ স্বয়ংক্রিয়ভাবে তৈরি হয়:
+            </p>
+            <ul style="padding-left: 20px; font-size: 0.88rem; color: var(--text-main); line-height: 1.8;">
+              <li>ইউনিক রসিদ সিরিয়াল নম্বর (যেমন: <code>EDA-RCP-8F4A12B0</code>)</li>
+              <li>বাংলায় তারিখ ও সঠিক সময় (সকাল/বিকাল)</li>
+              <li>টাকার পরিমাণ সংখ্যায় (৳) এবং <strong>বাংলা কথায় (শব্দে)</strong> রূপান্তর</li>
+              <li>সদস্যের নাম, আইডি ও খাত (সঞ্চয় জমা / কিস্তি আদায়)</li>
+              <li>গ্রহণকারীর অনুমোদন সিল ও সমিতির ওয়াটারমার্ক</li>
+            </ul>
+          </div>
+          <div style="background: var(--bg-body); border: 1px solid var(--border); border-radius: 12px; padding: 18px;">
+            <h5 style="color: var(--primary); margin-bottom: 8px;">রসিদ বিতরণের ৩টি সহজ উপায়:</h5>
+            <ol style="padding-left: 18px; font-size: 0.85rem; line-height: 1.7; color: var(--text-main);">
+              <li><strong>১-ক্লিকে হোয়াটসঅ্যাপে সেন্ড:</strong> সরাসরি সদস্যের হোয়াটসঅ্যাপে ডিজিটাল রসিদ টেক্সট ও লিংক চলে যায়।</li>
+              <li><strong>এইচডি ইমেজ (PNG) ডাউনলোড:</strong> ছবি হিসেবে ফোনে সংরক্ষণ বা মেসেঞ্জারে পাঠানোর সুবিধা।</li>
+              <li><strong>প্রিন্টার বা পিডিএফে প্রিন্ট:</strong> যেকোনো থার্মাল বা সাধারণ A4 প্রিন্টারে প্রিন্ট বের করে হার্ডকপি দেওয়া যায়।</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 11: Reports & Exports -->
+    <section id="sec-reports" class="section">
+      <div class="section-header">
+        <div class="section-icon">📈</div>
+        <div>
+          <h2 class="section-title">১১. ৭-স্তরের রিপোর্ট, এক্সেল ও PDF এক্সপোর্ট</h2>
+          <p class="section-tagline">যেকোনো নিরীক্ষায় অডিটরদের জন্য প্রস্তুত পূর্ণাঙ্গ হিসাব খাতা</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <p style="margin-bottom: 16px;">
+          সিস্টেমে একক কোনো সাধারণ তালিকা নয়, বরং মোট ৭টি বিশেষায়িত লেজার ট্যাব রয়েছে যা একক দিন (আজকের হিসাব), নির্দিষ্ট মাস অথবা সম্পূর্ণ বছরের ফিল্টার অনুযায়ী প্রদর্শন করা যায়।
+        </p>
+
+        <div class="grid-3" style="margin-bottom: 20px;">
+          <div class="kpi-box" style="text-align: left;">
+            <strong style="color: var(--primary);">১. সঞ্চয় জমা লেজার</strong>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">সকল সদস্যের জমার তারিখভিত্তিক অডিট তালিকা।</p>
+          </div>
+          <div class="kpi-box" style="text-align: left;">
+            <strong style="color: var(--primary);">২. সদস্য বকেয়া লেজার</strong>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">কার কত টাকা ও কত মাসের সঞ্চয় বাকি রয়েছে।</p>
+          </div>
+          <div class="kpi-box" style="text-align: left;">
+            <strong style="color: var(--primary);">৩. কিস্তি আদায় লেজার</strong>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">প্রজেক্ট থেকে গৃহীত কিস্তির পুঙ্খানুপুঙ্খ হিসাব।</p>
+          </div>
+          <div class="kpi-box" style="text-align: left;">
+            <strong style="color: var(--primary);">৪. প্রজেক্ট বকেয়া লেজার</strong>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">কোন চালকের কত টাকা কিস্তি খেলাপি বা বকেয়া।</p>
+          </div>
+          <div class="kpi-box" style="text-align: left;">
+            <strong style="color: var(--primary);">৫. লাভ ও লভ্যাংশ হিসাব</strong>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">বিনিয়োগকৃত অর্থ থেকে সমিতির অর্জিত প্রকৃত লাভ।</p>
+          </div>
+          <div class="kpi-box" style="text-align: left;">
+            <strong style="color: var(--primary);">৬. অফিস ব্যয় হিসাব</strong>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">অফিস পরিচালনায় মোট ব্যয়ের বিস্তারিত অডিট।</p>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px;">
+            <h4 style="color: #166534; font-size: 0.95rem; margin-bottom: 6px;">📊 বাংলা এক্সেল এক্সপোর্ট (.xlsx)</h4>
+            <p style="font-size: 0.82rem; color: #14532d;">
+              যেকোনো রিপোর্টের ডাটা ১-ক্লিকে মাইক্রোসফট এক্সেলে নামিয়ে ফেলা যায়। এক্সেলের কলাম হেডারে স্পষ্ট বাংলা ব্যবহৃত হওয়ায় পড়তে কোনো সমস্যা হয় না।
+            </p>
+          </div>
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 14px; border-radius: 10px;">
+            <h4 style="color: #1e40af; font-size: 0.95rem; margin-bottom: 6px;">📄 পিক্সেল-পারফেক্ট PDF এক্সপোর্ট</h4>
+            <p style="font-size: 0.82rem; color: #1e3a8a;">
+              সিস্টেমে ব্যবহৃত হিন্দ শিলিগুড়ি ফন্ট দ্বারা আন্তর্জাতিক কোয়ালিটির বাংলা পিডিএফ ডাউনলোড হয়, কোনো প্রকার যুক্তাক্ষর ভেঙে যাওয়া ছাড়াই।
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEVELOPER RIGHTS RESERVED & SUPPORT FOOTER -->
+    <footer class="developer-footer">
+      <div class="dev-grid">
+        <div>
+          <div class="dev-title">EDA Management System | ক্লায়েন্ট ডেলিভারি সংস্করণ</div>
+          <p class="dev-rights">
+            এই সফটওয়্যার সিস্টেমটির পরিকল্পনা, স্থাপত্য, ডাটাবেজ মডেলিং এবং সম্পূর্ণ ফ্রন্টএন্ড কোডিং স্বত্বাধিকারী দ্বারা সংরক্ষিত। অনুমতি ব্যতিরেকে কোনো অংশ কপি, নকল বা অননুমোদিত পুনরুৎপাদন আইনত নিষিদ্ধ।
+          </p>
+          <div class="dev-badge">
+            © 2026 Md Arif Uddin. All Developer Rights Reserved.
+          </div>
+        </div>
+        
+        <div style="text-align: right; min-width: 260px;">
+          <div style="color: white; font-weight: 700; margin-bottom: 6px;">কারিগরি সহায়তা ও যোগাযোগ:</div>
+          <div style="color: #38bdf8; font-size: 1.15rem; font-weight: 700; margin-bottom: 2px;">
+            মো. আরিফ উদ্দিন (Md Arif Uddin)
+          </div>
+          <div style="font-size: 0.82rem; color: #cbd5e1; margin-bottom: 10px;">
+            ফুলস্ট্যাক সফটওয়্যার ডেভেলপার
+          </div>
+          
+          <div style="background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(56, 189, 248, 0.4); padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; text-align: center;">
+            <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 2px;">ডেভেলপার মোবাইল নাম্বার:</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.5px;">📞 01825-334505</div>
+            <div style="font-size: 0.72rem; color: #cbd5e1;">সরাসরি কল বা WhatsApp: +8801825334505</div>
+          </div>
+
+          <a href="https://wa.me/8801825334505" target="_blank" class="btn btn-whatsapp no-print" style="display: inline-flex; justify-content: center; width: 100%;">
+            💬 হোয়াটসঅ্যাপে মেসেজ দিন
+          </a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+</body>
+</html>

@@ -74,9 +74,10 @@ export const apiRequest = async (endpoint, options = {}) => {
     if (memberHistoryMatch && method === 'GET') {
       return await membersService.getHistory(memberHistoryMatch[1]);
     }
-    const deleteDepositMatch = path.match(/^\/api\/members\/deposit\/([^/]+)$/);
-    if (deleteDepositMatch && method === 'DELETE') {
-      return await membersService.deleteDeposit(deleteDepositMatch[1]);
+    const depositMatch = path.match(/^\/api\/members\/deposit\/([^/]+)$/);
+    if (depositMatch) {
+      if (method === 'PUT') return await membersService.updateDeposit(depositMatch[1], body);
+      if (method === 'DELETE') return await membersService.deleteDeposit(depositMatch[1]);
     }
     const memberMatch = path.match(/^\/api\/members\/([^/]+)$/);
     if (memberMatch) {

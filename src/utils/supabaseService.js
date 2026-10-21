@@ -70,6 +70,8 @@ export const mapDepositFromDb = (d, memberMap = {}, userMap = {}) => {
   const populatedMember = memberMap[d.member_id] || (typeof d.members === 'object' && d.members ? mapMemberFromDb(d.members) : null);
   const populatedUser = userMap[d.recorded_by] || (typeof d.profiles === 'object' && d.profiles ? d.profiles : null);
 
+  const depositType = d.deposit_type || (d.month && d.month.includes('-') ? 'monthly' : (d.month?.includes('ভর্তি') ? 'admission_fee' : (d.month?.includes('এককালীন') ? 'one_time' : 'monthly')));
+
   return {
     _id: d.id,
     id: d.id,
@@ -77,6 +79,8 @@ export const mapDepositFromDb = (d, memberMap = {}, userMap = {}) => {
     amount: Number(d.amount || 0),
     date: d.date,
     month: d.month,
+    depositType,
+    note: d.note || '',
     recordedBy: populatedUser ? { _id: populatedUser.id, name: populatedUser.name } : null,
     createdAt: d.created_at
   };
@@ -118,7 +122,13 @@ export const mapExpenseFromDb = (exp, userMap = {}) => {
 
 export const mapUserFromDb = (u, memberMap = {}) => {
   if (!u) return null;
-  const populatedMember = u.member_id ? (memberMap[u.member_id] || u.members ? mapMemberFromDb(u.members) : null) : null;
+  const rawMember = Array.isArray(u.members) ? u.members[0] : u.members;
+  const populatedMember = (u.member_id || rawMember)
+    ? (memberMap[u.member_id] || (rawMember ? mapMemberFromDb(rawMember) : null))
+    : null;
+
+  const photoUrl = u.photo_url || u.avatar_url || u.photoUrl || populatedMember?.photoUrl || '';
+
   return {
     _id: u.id,
     id: u.id,
@@ -127,6 +137,7 @@ export const mapUserFromDb = (u, memberMap = {}) => {
     username: u.username,
     role: u.role,
     status: u.status,
+    photoUrl,
     memberId: populatedMember || u.member_id || null,
     createdAt: u.created_at
   };
@@ -206,6 +217,17 @@ export const authService = {
       throw new Error('আপনার অ্যাকাউন্টটি নিষ্ক্রিয় রয়েছে');
     }
 
+    if (profile && !profile.members && profile.mobile) {
+      const { data: matchedMember } = await supabase
+        .from('members')
+        .select('*')
+        .eq('mobile', profile.mobile)
+        .maybeSingle();
+      if (matchedMember) {
+        profile.members = matchedMember;
+      }
+    }
+
     const mapped = mapUserFromDb(profile);
     mapped.token = authData.session.access_token;
     return mapped;
@@ -239,6 +261,17 @@ export const authService = {
 
     if (!profile) {
       throw new Error('ব্যবহারকারী পাওয়া যায়নি');
+    }
+
+    if (profile && !profile.members && profile.mobile) {
+      const { data: matchedMember } = await supabase
+        .from('members')
+        .select('*')
+        .eq('mobile', profile.mobile)
+        .maybeSingle();
+      if (matchedMember) {
+        profile.members = matchedMember;
+      }
     }
 
     return mapUserFromDb(profile);
@@ -376,7 +409,7 @@ export const membersService = {
   async getAll() {
     const [{ data: members, error: memErr }, { data: deposits, error: depErr }] = await Promise.all([
       supabase.from('members').select('*').order('created_at', { ascending: false }),
-      supabase.from('deposits').select('id, member_id, amount')
+      supabase.from('deposits').select('id, member_id, amount, month, date, deposit_type')
     ]);
 
     if (memErr) throw new Error(memErr.message);
@@ -414,12 +447,12 @@ export const membersService = {
     const expectedMonths = generateMonthList(mappedMember.joiningDate);
     const monthSet = new Set(expectedMonths);
     mappedDeposits.forEach((d) => {
-      if (d.month) monthSet.add(d.month);
+      if (d.month && d.month.includes('-')) monthSet.add(d.month);
     });
     const allMonths = Array.from(monthSet).sort();
 
     const schedule = allMonths.map((mStr) => {
-      const monthDeposits = mappedDeposits.filter((d) => d.month === mStr);
+      const monthDeposits = mappedDeposits.filter((d) => (d.depositType === 'monthly' || !d.depositType) && d.month === mStr);
       const paidAmount = monthDeposits.reduce((sum, d) => sum + d.amount, 0);
       const isPaid = paidAmount >= mappedMember.monthlyDepositAmount;
 
@@ -586,21 +619,25 @@ export const membersService = {
   },
 
   async recordDeposit(memberId, body) {
-    const { amount, month, date } = body;
+    const { amount, month, date, depositType = 'monthly', note = '' } = body;
     if (!amount || Number(amount) <= 0) throw new Error('সঠিক জমার পরিমাণ দিন');
-    if (!month) throw new Error('মাস উল্লেখ করুন');
+    if (depositType === 'monthly' && !month) throw new Error('মাস উল্লেখ করুন');
 
     const { data: { session } } = await supabase.auth.getSession();
 
+    const insertData = {
+      member_id: memberId,
+      amount: Number(amount),
+      month: month || (date ? date.slice(0, 7) : new Date().toISOString().slice(0, 7)),
+      deposit_type: depositType,
+      note: note || null,
+      date: date ? new Date(date).toISOString() : new Date().toISOString(),
+      recorded_by: session?.user?.id || null
+    };
+
     const { data, error } = await supabase
       .from('deposits')
-      .insert({
-        member_id: memberId,
-        amount: Number(amount),
-        month,
-        date: date ? new Date(date).toISOString() : new Date().toISOString(),
-        recorded_by: session?.user?.id || null
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -623,6 +660,30 @@ export const membersService = {
     const { error } = await supabase.from('members').delete().eq('id', id);
     if (error) throw new Error(error.message);
     return { message: 'সদস্য এবং তার সংশ্লিষ্ট সমস্ত তথ্য সফলভাবে মুছে ফেলা হয়েছে' };
+  },
+
+  async updateDeposit(depositId, body) {
+    const { amount, month, date, depositType = 'monthly', note = '' } = body;
+    if (!amount || Number(amount) <= 0) throw new Error('সঠিক জমার পরিমাণ দিন');
+    if (depositType === 'monthly' && !month) throw new Error('মাস উল্লেখ করুন');
+
+    const updateData = {
+      amount: Number(amount),
+      month: month || (date ? date.slice(0, 7) : new Date().toISOString().slice(0, 7)),
+      deposit_type: depositType,
+      note: note || null,
+      date: date ? new Date(date).toISOString() : new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('deposits')
+      .update(updateData)
+      .eq('id', depositId)
+      .select('*, profiles(id, name)')
+      .single();
+
+    if (error) throw new Error(error.message);
+    return mapDepositFromDb(data);
   },
 
   async deleteDeposit(depositId) {
@@ -952,12 +1013,8 @@ export const reportsService = {
 
     let memberDueAmount = 0;
     for (const member of memList) {
-      const memberDeposits = depList.filter(dep => String(dep.member?._id || dep.member) === String(member._id));
-      const totalMemberDeposited = memberDeposits.reduce((sum, dep) => sum + dep.amount, 0);
-      const monthsElapsed = calculateMonthsElapsed(member.joiningDate);
-      const expectedDeposits = monthsElapsed * member.monthlyDepositAmount;
-      const memberDue = Math.max(0, expectedDeposits - totalMemberDeposited);
-      memberDueAmount += memberDue;
+      const metrics = calculateMemberMetrics(member, depList);
+      memberDueAmount += metrics.totalDue;
     }
 
     const totalInvestments = projList.reduce((sum, proj) => sum + proj.investmentAmount, 0);
@@ -982,6 +1039,7 @@ export const reportsService = {
 
     const activeProjects = projList.filter(p => p.status === 'active').length;
     const totalExpenses = expList.reduce((sum, exp) => sum + exp.amount, 0);
+    const currentBalance = totalDeposits + totalInstallmentsCollected - totalInvestments - totalExpenses;
 
     return {
       totalMembers,
@@ -994,7 +1052,8 @@ export const reportsService = {
       totalProfit,
       totalRealizedProfit: Math.round(totalRealizedProfit),
       activeProjects,
-      totalExpenses
+      totalExpenses,
+      currentBalance
     };
   },
 
@@ -1040,11 +1099,7 @@ export const reportsService = {
     const depList = (deposits || []).map(d => mapDepositFromDb(d));
 
     return memList.map(member => {
-      const memberDeposits = depList.filter(dep => String(dep.member?._id || dep.member) === String(member._id));
-      const totalDeposited = memberDeposits.reduce((sum, dep) => sum + dep.amount, 0);
-      const monthsElapsed = calculateMonthsElapsed(member.joiningDate);
-      const expectedDeposits = monthsElapsed * member.monthlyDepositAmount;
-      const totalDue = Math.max(0, expectedDeposits - totalDeposited);
+      const metrics = calculateMemberMetrics(member, depList);
 
       return {
         _id: member._id,
@@ -1052,8 +1107,8 @@ export const reportsService = {
         name: member.name,
         mobile: member.mobile,
         monthlyDepositAmount: member.monthlyDepositAmount,
-        totalDeposited,
-        totalDue,
+        totalDeposited: metrics.totalDeposited,
+        totalDue: metrics.totalDue,
         status: member.status
       };
     }).filter(m => m.totalDue > 0);
@@ -1204,11 +1259,9 @@ export const reportsService = {
     const futureProfitPool = Math.max(0, totalTargetProfit - totalExpenses);
 
     const memberReport = memList.map(member => {
-      const memberDeposits = depList.filter(dep => String(dep.member?._id || dep.member) === String(member._id));
-      const totalDeposited = memberDeposits.reduce((sum, dep) => sum + dep.amount, 0);
-      const monthsElapsed = calculateMonthsElapsed(member.joiningDate);
-      const expectedDeposits = monthsElapsed * member.monthlyDepositAmount;
-      const totalDue = Math.max(0, expectedDeposits - totalDeposited);
+      const metrics = calculateMemberMetrics(member, depList);
+      const totalDeposited = metrics.totalDeposited;
+      const totalDue = metrics.totalDue;
 
       const depositShare = totalDeposits > 0 ? totalDeposited / totalDeposits : 0;
       const currentProfit = currentProfitPool * depositShare;

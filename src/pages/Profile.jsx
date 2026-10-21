@@ -6,11 +6,15 @@ import { toBanglaNumber } from '../utils/bangla';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 import Footer from '../components/Footer';
-import { LogOut, UserPlus, Users, Edit, Shield, Check, X, Save, Eye } from 'lucide-react';
+import { LogOut, UserPlus, Users, Edit, Shield, Check, X, Save, Eye, Download } from 'lucide-react';
 
 export default function Profile() {
   const { user, logout } = useAuth();
   const isAdmin = user.role === 'admin';
+
+  const userPhoto = user?.photoUrl || user?.photo_url || user?.avatar_url || user?.memberId?.photoUrl || user?.memberId?.photo_url || '';
+  const [imageError, setImageError] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
 
   // State for Users List
   const [usersList, setUsersList] = useState([]);
@@ -185,22 +189,59 @@ export default function Profile() {
 
         {/* User Card */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderTop: '5px solid var(--primary)' }}>
-          <div style={{
-            width: '72px',
-            height: '72px',
-            backgroundColor: 'var(--primary-glow)',
-            color: 'var(--primary)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '2.2rem',
-            fontWeight: 'bold',
-            marginBottom: '12px',
-            flexShrink: 0
-          }}>
-            {user.name.charAt(0)}
-          </div>
+          {userPhoto && !imageError ? (
+            <div
+              onClick={() => setPreviewImage({ url: userPhoto, title: `${user.name} - প্রোফাইল ছবি` })}
+              style={{
+                width: '84px',
+                height: '84px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                marginBottom: '12px',
+                boxShadow: '0 4px 14px rgba(6, 78, 59, 0.18)',
+                border: '3px solid var(--primary)',
+                backgroundColor: '#f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              title="ছবি বড় করে দেখুন"
+            >
+              <img
+                src={userPhoto}
+                alt={user.name}
+                onError={() => setImageError(true)}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+            </div>
+          ) : (
+            <div style={{
+              width: '84px',
+              height: '84px',
+              backgroundColor: 'var(--primary-glow)',
+              color: 'var(--primary)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '2.4rem',
+              fontWeight: 'bold',
+              marginBottom: '12px',
+              flexShrink: 0,
+              border: '2px solid rgba(6, 78, 59, 0.15)'
+            }}>
+              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
           
           <h2 style={{ fontSize: 'var(--kpi-font)', marginBottom: '4px', wordBreak: 'break-word', width: '100%' }}>{user.name}</h2>
           <span className={`list-badge ${user.role === 'admin' ? 'badge-success' : 'badge-warning'}`} style={{ marginBottom: '16px' }}>
@@ -316,8 +357,28 @@ export default function Profile() {
                         {usersList.map((usr) => (
                           <tr key={usr._id}>
                             <td>
-                              <div style={{ fontWeight: 600 }}>{usr.name}</div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{usr.username}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {usr.photoUrl ? (
+                                  <img
+                                    src={usr.photoUrl}
+                                    alt={usr.name}
+                                    style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid var(--border)' }}
+                                  />
+                                ) : (
+                                  <div style={{
+                                    width: '28px', height: '28px', borderRadius: '50%',
+                                    backgroundColor: 'var(--primary-glow)', color: 'var(--primary)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontWeight: 700, fontSize: '0.8rem', flexShrink: 0
+                                  }}>
+                                    {usr.name ? usr.name.charAt(0).toUpperCase() : 'U'}
+                                  </div>
+                                )}
+                                <div>
+                                  <div style={{ fontWeight: 600 }}>{usr.name}</div>
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{usr.username}</div>
+                                </div>
+                              </div>
                             </td>
                             <td>
                               <span className={`list-badge ${usr.role === 'admin' ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '0.7rem', padding: '2px 6px' }}>
@@ -382,7 +443,28 @@ export default function Profile() {
               </div>
 
               <div className="card" style={{ borderLeft: '5px solid var(--primary)', padding: '12px' }}>
-                <h4 style={{ marginBottom: '8px' }}>{activeUserDetail.name}</h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  {activeUserDetail.photoUrl ? (
+                    <img
+                      src={activeUserDetail.photoUrl}
+                      alt={activeUserDetail.name}
+                      style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)', flexShrink: 0 }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '48px', height: '48px', borderRadius: '50%',
+                      backgroundColor: 'var(--primary-glow)', color: 'var(--primary)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 800, fontSize: '1.2rem', flexShrink: 0
+                    }}>
+                      {activeUserDetail.name ? activeUserDetail.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  )}
+                  <div>
+                    <h4 style={{ margin: 0 }}>{activeUserDetail.name}</h4>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>@{activeUserDetail.username}</span>
+                  </div>
+                </div>
                 <table style={{ width: '100%', fontSize: '0.85rem' }}>
                   <tbody>
                     <tr>
@@ -650,6 +732,51 @@ export default function Profile() {
 
         <Footer />
       </main>
+
+      {/* ----------------- MODAL: IMAGE PREVIEW LIGHTBOX ----------------- */}
+      {previewImage && (
+        <div 
+          className="modal-overlay" 
+          style={{ zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }} 
+          onClick={() => setPreviewImage(null)}
+        >
+          <div 
+            className="modal-content" 
+            onClick={(e) => e.stopPropagation()} 
+            style={{ maxWidth: '540px', padding: '16px', borderRadius: '16px', background: '#ffffff', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--primary-dark)', fontWeight: 600 }}>{previewImage.title}</h4>
+              <button 
+                className="modal-close" 
+                onClick={() => setPreviewImage(null)} 
+                style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ maxHeight: '70vh', overflow: 'auto', borderRadius: '10px', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px' }}>
+              <img 
+                src={previewImage.url} 
+                alt={previewImage.title} 
+                style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: '8px' }} 
+              />
+            </div>
+            <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <a 
+                href={previewImage.url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="btn btn-outline btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Download size={14} />
+                <span>ফুল স্ক্রিন / ডাউনলোড</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>

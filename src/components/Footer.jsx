@@ -14,6 +14,17 @@ export default function Footer() {
       }} 
       className="system-footer"
     >
+      <div style={{ marginBottom: '4px' }}>
+        🌐 অফিসিয়াল ওয়েবসাইট:{' '}
+        <a 
+          href="https://edass.netlify.app" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 700 }}
+        >
+          edass.netlify.app
+        </a>
+      </div>
       <div>
         Developed by: <strong style={{ color: 'var(--primary-dark)' }}>Md Arif Uddin</strong> |{' '}
         <a 

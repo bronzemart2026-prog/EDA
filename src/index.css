@@ -82,6 +82,10 @@ body {
   overflow-x: hidden;
 }
 
+button, input, select, textarea {
+  font-family: inherit;
+}
+
 /* ===== ROOT CONTAINER - Mobile app centered layout ===== */
 #root {
   width: 100%;

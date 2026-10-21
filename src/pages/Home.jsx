@@ -6,7 +6,8 @@ import { toBanglaNumber, formatBDT } from '../utils/bangla';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 import Footer from '../components/Footer';
-import { Users, Landmark, AlertCircle, TrendingUp, HandCoins, LandmarkIcon, CheckCircle2, Wallet, Receipt } from 'lucide-react';
+import InstallAppButton from '../components/InstallAppButton';
+import { Users, Landmark, AlertCircle, TrendingUp, HandCoins, LandmarkIcon, CheckCircle2, Wallet, Receipt, Globe, ExternalLink, ArrowUpRight } from 'lucide-react';
 
 export default function Home() {
   const { user } = useAuth();
@@ -68,6 +69,8 @@ export default function Home() {
       <Header title="ড্যাশবোর্ড" />
 
       <main className="content-wrapper">
+        <InstallAppButton variant="banner" />
+
         <div className="card" style={{
           marginBottom: '20px',
           background: 'linear-gradient(135deg, #064e3b 0%, #047857 55%, #0284c7 100%)',
@@ -78,7 +81,9 @@ export default function Home() {
           alignItems: 'center',
           padding: '16px 20px',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-md)'
+          boxShadow: 'var(--shadow-md)',
+          flexWrap: 'wrap',
+          gap: '12px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <img src="/main_logo.png" alt="Logo" style={{
@@ -98,6 +103,113 @@ export default function Home() {
             </div>
           </div>
 
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <a
+              href="https://edass.netlify.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+                color: '#ffffff',
+                padding: '6px 12px',
+                borderRadius: '16px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                fontFamily: 'inherit'
+              }}
+              title="অফিসিয়াল ওয়েবসাইট খুলুন (edass.netlify.app)"
+            >
+              <Globe size={13} />
+              <span>ওয়েবসাইট</span>
+              <ExternalLink size={11} style={{ opacity: 0.8 }} />
+            </a>
+            <InstallAppButton variant="compact" />
+          </div>
+        </div>
+
+        {/* App-like Tile for Official Website */}
+        <div style={{ marginBottom: '18px' }}>
+          <a
+            href="https://edass.netlify.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)',
+              border: '1.5px solid #bbf7d0',
+              borderRadius: '16px',
+              padding: '12px 16px',
+              boxShadow: '0 3px 10px rgba(4, 120, 87, 0.08)',
+              transition: 'all 0.2s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(4, 120, 87, 0.15)';
+              e.currentTarget.style.borderColor = '#4ade80';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 3px 10px rgba(4, 120, 87, 0.08)';
+              e.currentTarget.style.borderColor = '#bbf7d0';
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '13px',
+                  background: 'linear-gradient(135deg, #059669 0%, #0284c7 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 10px rgba(5, 150, 105, 0.3)',
+                  flexShrink: 0
+                }}
+              >
+                <Globe size={24} color="#ffffff" />
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#064e3b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>EDA অফিসিয়াল ওয়েবসাইট</span>
+                  <ExternalLink size={13} color="#059669" />
+                </div>
+                <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '1px' }}>
+                  edass.netlify.app · ব্রাউজারে সাইট দেখতে ক্লিক করুন
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                backgroundColor: '#ecfdf5',
+                color: '#059669',
+                border: '1px solid #a7f3d0',
+                padding: '6px 12px',
+                borderRadius: '10px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>ভিজিট করুন</span>
+              <ArrowUpRight size={13} />
+            </div>
+          </a>
         </div>
 
         {error && (

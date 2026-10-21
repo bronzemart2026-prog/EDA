@@ -1,0 +1,30 @@
+{
+  "short_name": "EDA",
+  "name": "Entrepreneur Development Association (EDA)",
+  "description": "সমিতি ও বিনিয়োগ/ক্ষুদ্র ঋণ ব্যবস্থাপনা সিস্টেম",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#064e3b",
+  "theme_color": "#047857",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/main_logo.png",
+      "type": "image/png",
+      "sizes": "192x192 512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/main_logo.png",
+      "type": "image/png",
+      "sizes": "192x192 512x512",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "type": "image/png",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "purpose": "any"
+    }
+  ]
+}
